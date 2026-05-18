@@ -1,0 +1,106 @@
+workspace_root: <workspace_root>
+
+data:
+  graph_pt: data/graphs/hetero_graph_v2.pt
+  graph_metadata: data/graphs/hetero_graph_v2_metadata.json
+  master_site_registry: data/master_site_registry.csv
+  node_feature_schema: data/node_feature_schema.json
+
+output:
+  root: output/week4
+  splits: output/week4/splits
+  runs: output/week4/runs
+  metrics: output/week4/metrics
+  predictions: output/week4/predictions
+  plots: output/week4/plots
+  logs: output/week4/logs
+  audits: output/week4/audits
+
+tasks:
+  primary_label_space:
+    - licensed_baseline
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  positive_label_tiers:
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  excluded_tiers:
+    - gray_candidate_minimum
+    - gray_candidate_strong
+    - control_legal_commercial
+  same_region_jurisdictions:
+    - Belgium
+    - France
+    - Philippines
+  transfer_pooled_to_france:
+    target_jurisdiction: France
+    source_excluded_jurisdiction: France
+
+seeds:
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+
+splits:
+  pooled_primary:
+    train_fraction: 0.70
+    val_fraction: 0.15
+    test_fraction: 0.15
+    strategy: group_shuffle
+    group_columns:
+      - operator_or_case
+      - brand
+      - root_domain
+    balance_attempts: 20
+  same_region_sensitivity:
+    n_splits: 5
+    val_fraction_within_train: 0.20
+    random_state: 42
+    strategy: group_kfold
+    group_columns:
+      - operator_or_case
+      - brand
+      - root_domain
+    balance_attempts: 20
+  transfer_pooled_to_france:
+    target_adapt_fraction: 0.40
+    target_val_fraction: 0.20
+    target_test_fraction: 0.40
+
+runtime:
+  exclude_isolated_websites: true
+  use_edge_weight: true
+  validate_no_all_zero_feature_columns: true
+  full_batch: true
+  device: auto
+
+model_defaults:
+  hidden_dim: 64
+  dropout: 0.30
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  max_epochs: 200
+  patience: 20
+  mlp_hidden_dims:
+    - 64
+    - 32
+  domain_loss_lambda_max: 0.50
+  domain_loss_warmup_fraction: 0.30
+
+metrics:
+  primary: roc_auc
+  secondary:
+    - pr_auc
+    - balanced_accuracy
+    - macro_f1
+
+acceptance_thresholds:
+  same_region_sensitivity:
+    Philippines:
+      hetero_gnn_roc_auc_min: 0.80
+
+method_positioning:
+  week4_graph_baseline: HeteroConv baseline
+  week5_incremental_method: HeCo contrastive learning

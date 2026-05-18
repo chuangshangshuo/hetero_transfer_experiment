@@ -1,0 +1,2 @@
+task,model,num_runs,roc_auc_mean,roc_auc_std,pr_auc_mean,pr_auc_std,balanced_accuracy_mean,balanced_accuracy_std,macro_f1_mean,macro_f1_std,threshold_mean,threshold_std
+pooled_primary_finetune,heco_disc_lr_finetune,5,0.9321514888634772,0.07155830253346089,0.9282095035941446,0.08198536095989649,0.8579404693563785,0.08071526501903703,0.8539171013084716,0.08335680690513525,0.25588196218013765,0.14639311454561885

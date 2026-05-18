@@ -1,0 +1,3 @@
+experiment,hypothesis,observed_metric,observed_value,threshold,status,is_posthoc
+Week9_hard_negative_family,hard_negative_family_mean_auc,mean hard-negative family AUC,0.621849647266314,>=0.80,fail,True
+Week9_hard_negative_family,hard_negative_tsars_auc,tsars hard-negative AUC,0.3864197530864197,>=0.80,fail,True

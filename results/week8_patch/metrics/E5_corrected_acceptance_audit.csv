@@ -1,0 +1,7 @@
+hypothesis,observed_metric,observed_value,interpretation,status,is_posthoc
+W8P_E5_ccTLD_sensitivity,T3_full_minus_no_cctld_auc,0.08153573749187784,ccTLD/local-TLD removal remains a material post-hoc diagnostic effect,diagnostic_support,True
+W8P_E5_website_lexical_removed,T3_C3_no_website_lexical_auc,0.7134294996751137,zeroing Website lexical features substantially weakens T3,diagnostic_support,True
+W8P_E5_lex_only_vs_graph_only,T3_lex_only_minus_graph_only_auc,0.2395692007797271,Website lexical-only outperforms graph-only on T3,diagnostic_support,True
+W8P_E5_no_edges_equivalent_to_lex_only,T3_no_edges_minus_lex_only_auc,0.0,C6 no_edges checks that lex-only semantics match empty-edge behavior,consistent,True
+W8P_E5_edge_sensitivity,max_T3_drop_no_cert_or_no_registrar,0.0706842105263158,certificate/registrar edges have post-hoc diagnostic contribution,diagnostic_support,True
+W8P_E5_infra_only,T3_infra_only_auc,0.9861234567901235,infra-only removes referenced_by and matches full when ExtRef is not needed,diagnostic_support,True

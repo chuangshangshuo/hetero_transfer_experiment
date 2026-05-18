@@ -1,0 +1,8 @@
+artifact,path,expected_rows,observed_rows,status
+E1_raw_runs,output\week8\metrics\E1_edge_ablation_raw_runs.csv,120,120,pass
+E2_pair_scores,output\week8\metrics\E2_pair_scores.csv,30,30,pass
+E2_realized_transfer_auc,output\week8\metrics\E2_realized_transfer_auc.csv,30,30,pass
+E3_lofo_raw_runs,output\week8\metrics\E3_lofo_family_sensitivity_raw.csv,35,35,pass
+E3_permutation_runs,output\week8\audits\E3_permutation_aucs.csv,500,500,pass
+E4_raw_runs,output\week8\metrics\E4_three_scenario_raw_runs.csv,15,15,pass
+E5_raw_runs,output\week8\metrics\E5_structure_vs_lexical.csv,100,100,pass

@@ -1,0 +1,915 @@
+# Progress Log
+
+## 2026-04-14 to 2026-04-15 Prior Context
+- Built the second-stage OSINT/cross-source enhancement pipeline and upgraded it into a reusable evidence/sample-quality/anomaly pipeline.
+- Added source-cluster validation, OSINT branch tagging, anomaly summaries, baseline deviation scoring, and an initial execution-note report with LibreOffice render verification.
+
+## 2026-04-15 V4 Tightening Round
+- Restored context from `task_plan.md`, `findings.md`, and `progress.md` before editing.
+- Inspected the current `phase2_upgrade_research_pipeline.py`, the key output tables, and the follow-up staging frames to identify the minimal v4-tightening edit surface.
+- Tightened `build_sample_level_validation` so that:
+  - gray minimum requires discovery + target-page self evidence + negative license check
+  - gray strong requires archive/infrastructure strength, non-discovery breadth, or relation support to cross-verified illegal samples
+  - borderline discovery-led stacks are downgraded to `weak_strong_borderline`
+  - illegal cross-verified now requires official basis plus non-official independent support and strong reinforcement
+- Added v4 sample-quality outputs:
+  - `osint_strength_profile_summary.csv`
+  - `discovery_source_diversity_summary.csv`
+  - `discovery_origin_family_summary.csv`
+  - `gray_candidate_relation_support_summary.csv`
+- Upgraded anomaly outputs by adding:
+  - `strong_weak_mix_summary.csv`
+  - decomposed `baseline_deviation_scores.csv`
+  - `deviation_feature_contribution.csv`
+- Updated the PH same-region comparison to focus on anomaly features and the cross-verified illegal tier.
+- Replaced the old mojibake-prone report builder with a clean override that generates the v4 execution-note report.
+- Hit two runtime issues during the v4 rerun:
+  - a `sample_tier` merge collision in deviation ranking, fixed by narrowing the merge columns
+  - a duplicate `strong_osint_branch_count` merge in `augment_tier_comparison_tables`, fixed by only merging the evidence count
+- Re-ran the full pipeline successfully after both fixes.
+- LibreOffice render check succeeded again and the rendered PDF text check reported `question_mark_triplets=0`.
+
+## 2026-04-15 V4 Combined Report Round
+- Re-checked the stable v4 result tables and kept the reporting layer fully aligned with the tightened second-stage logic instead of introducing any new analysis branch.
+- Added `<workspace_root>\phase2\scripts\build_phase2_v4_combined_reports.py` to generate a presentation-oriented short report and a documentation-oriented detailed report.
+- Generated:
+  - `<workspace_root>\phase2\doc\第二阶段_v4综合汇报简版.docx`
+  - `<workspace_root>\phase2\doc\第二阶段_v4综合详细版.docx`
+- Rendered both reports with LibreOffice to:
+  - `<workspace_root>\phase2\tmp\phase2_v4_combined_reports\rendered\第二阶段_v4综合汇报简版.pdf`
+  - `<workspace_root>\phase2\tmp\phase2_v4_combined_reports\rendered\第二阶段_v4综合详细版.pdf`
+- Verified both rendered PDFs with `pypdf`; `question_mark_triplets=0` for both, so this round did not reintroduce large-scale `???` mojibake.
+
+## 2026-04-15 Full Stage-1 Report Round
+- Corrected the reporting scope from “phase2 v4 only” to “the full first-stage experimental program”, explicitly covering experiment 1, experiment 2, legal control, licensed baseline, gray candidates, and illegal confirmed samples in one narrative.
+- Added `<workspace_root>\phase1\scripts\build_phase1_full_stage_reports.py` to generate a presentation-oriented stage-wide short report and a full technical report.
+- Generated:
+  - `<workspace_root>\phase1\doc\第一阶段综合实验报告_汇报简版.docx`
+  - `<workspace_root>\phase1\doc\第一阶段综合实验报告_详细版.docx`
+- Rendered both stage-1 reports with LibreOffice to:
+  - `<workspace_root>\phase1\tmp\phase1_full_stage_reports\rendered\第一阶段综合实验报告_汇报简版.pdf`
+  - `<workspace_root>\phase1\tmp\phase1_full_stage_reports\rendered\第一阶段综合实验报告_详细版.pdf`
+- Verified both rendered PDFs with `pypdf`; `question_mark_triplets=0` for both.
+
+## 2026-04-15 Git-Style Packaging Round
+- Created a new repository-style folder at `<workspace_root>\git` and initialized it with `git init`.
+- Organized the project into `scripts/`, `data/`, `docs/`, and `project/` to resemble a GitHub-ready repository structure.
+- Copied phase1 and phase2 core scripts, final reports, key audit tables, evidence tables, and formal follow-up outputs into the new folder.
+- Explicitly excluded temporary and intermediate files such as `tmp/`, `__pycache__/`, rendered caches outside final PDFs, large bootstrap draw dumps, and full staging caches like `phase2_followup_*_full.csv`.
+- Added `README.md` and `.gitignore` so the folder can serve as a clean handoff or future GitHub import base.
+
+## 2026-04-16 RLS / Hidden-Column Design Review
+
+## 2026-04-20 Experimental Report PPT Round
+- Restored planning context and added Phase 7 for the experimental report PowerPoint.
+- Began traversing project outputs, docs, CSV tables, and existing rendered figures for phase1 / phase2 materials.
+- Extracted phase1 / phase2 / follow-up metrics from CSVs and report DOCX files.
+- Built a 14-slide editable PPTX at `<workspace_root>\output\ppt\experiment_report_20260420\output.pptx`.
+- Rendered two preview loops and inspected the contact sheet; fixed the follow-up slide after the first preview showed an uninformative empty chart.
+- Verified the final PPTX package contains 14 slide XML files, 12 native chart XML files, and 3 embedded media files.
+- Errors encountered:
+  - `rg --files` was blocked with access denied, so PowerShell recursive listing was used.
+  - The generated artifact-tool junction initially pointed to an invalid relative target; recreated it as an absolute junction.
+  - Connector arrows needed bound shapes, so flow arrows were changed to editable right-arrow shapes.
+  - Some compact text boxes were too short and were resized before export.
+- Restored planning context from `task_plan.md`, `findings.md`, and `progress.md`.
+- Parsed `<wechat_files_redacted>\msg\file\2026-04\死锁问题扩展.docx` and extracted both the original failing design and "方案二".
+- Confirmed that "方案二" fixes the original RLS predicate dependency on `username`, but still fails if ordinary users run `SELECT *` against the base table, because the hidden `username` column is still part of `*` and was never granted.
+- Prepared a replacement design direction that separates base-table control from user-facing projection, so ordinary users can query only visible columns while still being restricted to their own rows.
+ 
+## 2026-04-20 Six-Region Neutral Stability Expansion
+- Added `<workspace_root>\phase2\scripts\phase2_region_expansion_pipeline.py` as an isolated expansion pipeline.
+- Generated 14 region expansion CSV outputs under `<workspace_root>\phase2\data\region_expansion\`.
+- Generated `<workspace_root>\phase1\doc\第一阶段扩大稳健性实验报告_六地扩展.docx`.
+- Synced the new pipeline, CSV outputs, and report into `<workspace_root>\git`.
+- Rendered the report to `<workspace_root>\phase1\tmp\region_expansion_rendered\第一阶段扩大稳健性实验报告_六地扩展.pdf`.
+- Verified the rendered PDF with `pypdf`; `question_mark_triplets=0`.
+- Key generated metrics:
+  - region expansion site profile rows: 401.
+  - experiment 1 labels: 4 partial support, 1 opposite/unsupported, 1 insufficient.
+  - experiment 2 labels: 3 support, 3 insufficient.
+  - conclusion-fit audit: experiment 1 support, experiment 2 support, evidence-quality partial support.
+- Errors encountered:
+  - Bundled Python does not include `requests`, so the expansion pipeline uses standard-library `urllib`.
+  - Belgian license data required an unverified SSL context due a local certificate-chain failure; this is recorded in the source registry and collection audit.
+  - Direct Python opening of the Chinese report path failed through PowerShell encoding once; validation was repeated by selecting the newest DOCX via `Path.glob`.
+
+## 2026-04-20 Integrated Existing Report With Six-Region Expansion
+- Integrated the six-region neutral stability expansion into `<user_home>\Downloads\非法网络赌博研究_第一阶段综合实验报告.docx`.
+- Preserved the original file and generated `<user_home>\Downloads\非法网络赌博研究_第一阶段综合实验报告_加入六地扩展.docx`.
+- Inserted a new section before the original conclusion:
+  - `八、扩大实验：六地扩展中立稳健性验证`
+  - moved the original comprehensive conclusion to `九、综合结论与研究发现`.
+- Added summary tables for official source collection status, sample-tier distribution, experiment 1 expansion results, experiment 2 expansion results, region-level stability labels, and conclusion-fit audit.
+- Rendered the integrated report to `<workspace_root>\tmp\docs\integrated_report_rendered\非法网络赌博研究_第一阶段综合实验报告_加入六地扩展.pdf`.
+- Verified the rendered PDF with `pypdf`; `question_mark_triplets=0`. DOCX text inspection confirmed the new section and renumbered conclusion exist.
+
+## 2026-04-21 Six-Region Infrastructure Enhancement
+- Added `<workspace_root>\phase2\scripts\phase2_region_expansion_infra_enhancement.py`.
+- Reused the frozen six-region sample tables and collected DNS/TLS/RDAP metadata without visiting illegal landing pages.
+- Generated 14 enhancement CSV outputs under `<workspace_root>\phase2\data\region_expansion\`, including infra relation, TLS detail, infra feature matrix, experiment 1 infra metrics, four-dimensional deviation summary, pooled licensed-vs-illegal audit, France TLD-bias audit, and Italy ADM-source verification audit.
+- Generated `<workspace_root>\phase1\doc\第一阶段扩大稳健性实验报告_六地扩展_基础设施增强.docx`.
+- Integrated the enhancement into `<user_home>\Downloads\非法网络赌博研究_第一阶段综合实验报告_加入六地扩展_基础设施增强.docx`.
+- Rendered PDFs to `<workspace_root>\tmp\docs\infra_enhancement_rendered\`; `pypdf` verification reported 20 pages for the integrated report, 8 pages for the standalone enhancement report, and `question_mark_triplets=0`.
+- Synced the enhanced script, 28 total region-expansion CSVs, DOCX reports, PDFs, and updated README into `<workspace_root>\git`.
+- Important neutrality notes:
+  - The experiment 1 infra primary metric is same-region legal-commercial control deviation, not a raw one-way infra strength score.
+  - The pooled licensed-vs-illegal result uses frozen exp2d weights and is an audit, not a retrained classifier.
+  - Italy licensed candidates remain sensitivity-only because a current machine-readable ADM authorized-domain source was not verified.
+
+## 2026-04-23 PA Removal and Hetero Transfer v2 Workspace
+- Archived the PromotionAccount collection attempt to `<workspace_root>\phase2\data\promotion_collection_archived\`.
+- Moved the active PA collector and key PA output tables into the archive:
+  - `collect_promotion_osint.py`
+  - `promotion_collection_audit.csv`
+  - `promotion_accounts.csv`
+  - `promotion_edges.csv`
+- Added `README_archived.md` documenting the 2026-04-22 collection, 1/120 initial weak hit rate (0.83%), 0 high-confidence URL/domain hits, the 2026-04-23 removal decision, and the migration to ExternalReference.
+- Created `<workspace_root>\hetero_transfer_experiment_v2\` as the clean v2 workspace.
+- v2 active schema is 6 nodes and 6 edges: Website, IP, Certificate, NameServer, Registrar, ExternalReference; hosted_on, uses_cert, uses_ns, registered_via, redirects_to, referenced_by.
+- Added Week 3-10 directory and script skeletons aligned to the v2 manual.
+- Added MaxMind GeoLite2-ASN download helper and PyG CUDA 11.8 environment files. MaxMind download still requires a user-provided license key.
+- Added `paper/outline_v2.md` with §3.1, §3.3, and §5.5 updates.
+- Verified `src/data/sanity_check.py` passes and no active PA collector/config remains outside the compliance archive.
+ 
+## 2026-04-23 Week 3 Heterogeneous Graph Build
+- Downloaded MaxMind GeoLite2-ASN locally with a temporary environment variable; the license key was not written to the workspace or git handoff.
+- Implemented `<workspace_root>\hetero_transfer_experiment_v2\src\data\build_hetero_graph.py` as the PA-free v2 graph builder.
+- Integrated phase1 baseline site/infrastructure data, phase2 illegal follow-up infrastructure, six-region expansion site profiles, six-region DNS/TLS/RDAP enhancement data, and ExternalReference evidence from search discovery plus archive history.
+- Generated Week 3 graph outputs under `<workspace_root>\hetero_transfer_experiment_v2\data\`, including `master_site_registry.csv`, `duplicate_audit.csv`, `site_registry_input_rows_audit.csv`, node/edge CSVs, fallback graph NPZ, graph metadata, and version checksums.
+- Actual node counts: Website 623, IP 1325, Certificate 510, NameServer 959, Registrar 79, ExternalReference 53.
+- Actual edge counts: hosted_on 1889, uses_cert 942, uses_ns 1690, registered_via 253, redirects_to 131, referenced_by 929.
+- MaxMind ASN lookup was active and produced 1862 ASN hits across IP evidence.
+- PyG `.pt` export was skipped because the active runtime does not yet include `torch` and `torch_geometric`; the fallback NPZ contains all six node feature matrices and six edge-index arrays for later conversion.
+- Verified `src/data/sanity_check.py` still passes and graph metadata records `promotion_account_status = archived_excluded`.
+- Synced Week 3 code/config/docs to `<workspace_root>\git\project\hetero_transfer_experiment_v2` and graph outputs to `<workspace_root>\git\data\hetero_transfer_experiment_v2`.
+- Excluded MaxMind database binaries and tarballs from the git handoff; only MaxMind README/checksum summary was copied.
+
+## 2026-04-23 Canonical Hetero Transfer Workspace Sync
+- Promoted `<workspace_root>\hetero_transfer_experiment` as the canonical workspace for all subsequent heterogeneous transfer experiments.
+- Synced the PA-free v2 workspace contents into `<workspace_root>\hetero_transfer_experiment`, including code, configs, docs, source materials, Week 3 graph outputs, and local lightweight dependencies.
+- Archived legacy active PA files that remained in the old workspace under `<workspace_root>\hetero_transfer_experiment\source_materials\archive\legacy_pa_active_files_20260423`.
+- Updated the target README and Week 3 build summary so commands and workspace paths point to `<workspace_root>\hetero_transfer_experiment`.
+- Re-ran `src/data/sanity_check.py` and `src/data/build_hetero_graph.py` from the canonical workspace; outputs matched the v2 build: 3549 nodes and 5834 edges.
+- Future implementation should happen first under `<workspace_root>\hetero_transfer_experiment`, with git handoff copies synced from that directory.
+
+## 2026-04-23 Canonical Workspace Completeness Audit
+- Rechecked `<workspace_root>\hetero_transfer_experiment` against the v2 source snapshot and Week 3 required artifact list.
+- Required file missing count: 0.
+- Missing from v2 snapshot count: 0.
+- Confirmed graph metadata remains `schema = v2_6_nodes_6_edges_4_core_metapaths` and `promotion_account_status = archived_excluded`.
+- Confirmed fallback graph package contains 12 arrays: 6 node feature matrices and 6 edge-index matrices.
+- Confirmed MaxMind GeoLite2-ASN `.mmdb` exists locally and matches `GeoLite2-ASN.sha256`.
+- Found and archived old PA/legacy active residues from the pre-v2 workspace:
+  - `configs/default.yaml`
+  - `data/processed/promotion_osint/*`
+  - `data/raw/promotion_osint/*`
+  - `docs/requirements/aaa.txt`
+  - `docs/requirements/experiment_manual_summary.md`
+  - `source_materials/data/phase1/core/promo_relation.csv`
+- Strengthened `src/data/sanity_check.py` to reject legacy `configs/default.yaml`.
+- Re-ran sanity check and graph build after cleanup; outputs remained 3549 nodes and 5834 edges.
+
+## 2026-04-23 Conda PyTorch/PyG Environment Setup
+- Located Anaconda at `<user_home>\anaconda3`; `conda` was not on PATH but works through the full executable path.
+- Detected no NVIDIA CUDA runtime on this machine (`__cuda = 0`) and Windows only reports Intel Iris Xe graphics, so configured a CPU PyTorch/PyG environment instead of installing unusable CUDA packages.
+- Created conda env `hetero-transfer-v2` with Python 3.10.
+- Installed PyTorch 2.5.1 CPU, PyG 2.6.1, and PyG CPU extension wheels: `pyg-lib`, `torch-scatter`, `torch-sparse`, `torch-cluster`, and `torch-spline-conv`.
+- Installed supporting experiment dependencies: numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, pyyaml, networkx, tqdm, and maxminddb.
+- Fixed the PyG export bug in `src/data/build_hetero_graph.py` by using the unified `node_id` column for Website nodes.
+- Updated `configs/default_v2.yaml` so `workspace_root` points to `<workspace_root>/hetero_transfer_experiment`.
+- Generated `data/graphs/hetero_graph_v1.pt` successfully; native PyG load test confirmed Website.x `(623, 11)` and hosted_on edge_index `(2, 1889)`.
+- Added environment records:
+  - `configs/environment_pyg_cpu.yml`
+  - `configs/environment_pyg_cpu_export.yml`
+  - `configs/requirements-week3.lock.txt`
+  - `data/versions/pyg_environment_verification.json`
+- Added and verified `scripts/setup/run_week3_build_conda.ps1`, which sequentially runs environment verification, graph build, and sanity check.
+
+## 2026-04-24 Week 3 Graph v2 Completion
+- Completed the Week 3 graph-repair and schema-upgrade round in the canonical workspace `<workspace_root>\hetero_transfer_experiment`.
+- Rebuilt the graph as Graph v2 with `6` node types, `5` semantic relations, and `10` explicitly materialized PyG edge types.
+- Eliminated Website label leakage; final `Website.x` is `(623, 7)` and contains only `feat_*` structural features.
+- Removed `redirects_to` from the active graph and replaced it with audit-only reporting; final redirect audit is `166 -> 11 -> 7 -> 0`.
+- Deduplicated all active forward edges and preserved `edge_count_raw` plus `edge_weight`; final forward unique edge counts are:
+  - hosted_on `1516`
+  - uses_cert `519`
+  - uses_ns `1662`
+  - registered_via `252`
+  - referenced_by `57`
+- Added `referenced_by` hub control with inverse destination-degree normalization and emitted `extref_hub_audit.csv`.
+- Backfilled missing phase1 `sample_tier` values and confirmed final canonical backfill counts:
+  - `licensed_baseline = 85`
+  - `control_legal_commercial = 34`
+- Marked and audited `38` isolated Website nodes, all retained in the graph but excluded by default from training.
+- Generated final Week 3 outputs:
+  - `data/graphs/hetero_graph_v2.npz`
+  - `data/graphs/hetero_graph_v2.pt`
+  - `data/graphs/hetero_graph_v2_metadata.json`
+  - `data/versions/feature_builder_state.json`
+  - `data/versions/hetero_graph_v2.sha256`
+  - `data/node_feature_schema.json`
+  - `data/edge_schema.json`
+  - `data/audits/redirect_audit.csv`
+  - `data/audits/edge_dedup_summary.csv`
+  - `data/audits/isolated_website_nodes.csv`
+  - `data/audits/extref_hub_audit.csv`
+  - `data/audits/website_tier_backfill_audit.csv`
+- Archived legacy Graph v1 outputs under `data/graphs/archived/` and `data/versions/archived/`.
+- Re-ran `scripts/setup/run_week3_build_conda.ps1`; the full environment verification, graph build, PyG export, and sanity-check sequence passed end-to-end.
+- Synced the updated Week 3 code, schedule documents, and Graph v2 outputs to:
+  - `<workspace_root>\git\project\hetero_transfer_experiment`
+  - `<workspace_root>\git\data\hetero_transfer_experiment`
+
+## 2026-04-24 Week 4 Planning Kickoff
+- Restored planning context from `task_plan.md`, `findings.md`, and `progress.md`.
+- Re-audited the canonical workspace after Week 3 closure, including:
+  - `configs/default_v2.yaml`
+  - `data/master_site_registry.csv`
+  - `data/graphs/hetero_graph_v2_metadata.json`
+  - `README.md`
+  - `docs/Week3_graph_build_summary.md`
+- Confirmed that Graph v2 already exposes the core supervision fields needed for Week 4:
+  - labels
+  - `sample_tier`
+  - `jurisdiction`
+  - default isolated-node exclusion flags
+- Confirmed that the next bottleneck is implementation readiness, not data assembly:
+  - `src/models`, `src/train`, `src/transfer`, and `src/explain` are still placeholder files.
+  - Week 4 therefore needs to start with a baseline-training stack, not transfer-method tuning.
+- Added Phase 14 to `task_plan.md` to define Week 4 as a baseline-launch week with:
+  - task-definition and split freezing
+  - Graph v2 loader / validation utilities
+  - Website-only sanity baseline
+  - first graph baseline
+  - reproducible split artifacts and seed manifests
+  - formal pooled licensed-vs-illegal runs
+  - README / paper-outline alignment
+- Recorded new planning findings in `findings.md`, including the current jurisdiction-by-tier viability and the stale `paper/outline_v2.md` method description.
+- No experiment code was changed in this planning round; only the project planning files were updated so Week 4 can start from an agreed execution scope.
+
+## 2026-04-24 Week 4 Baseline and First Transfer Completion
+- Added `configs/week4_experiments.yaml` as the single source of truth for Week 4 task scope, split policy, seeds, runtime defaults, and output paths.
+- Implemented shared Week 4 training utilities in:
+  - `src/train/utils.py`
+  - `src/models/hetero_full.py`
+  - `src/transfer/dann_head.py`
+- Implemented the Week 4 experiment entrypoints:
+  - `src/train/train_single.py` for pooled primary plus same-region sensitivity
+  - `src/train/train_transfer_dann.py` for pooled-to-France `source_only` and `DANN`
+- Smoke tests passed for:
+  - pooled primary baseline stack
+  - France transfer stack
+- Resolved one early implementation bug:
+  - the initial registry merge validator incorrectly treated optional metadata nulls as fatal
+  - the validator was narrowed to required training columns only
+- Formal Week 4 experiment runs completed successfully and materialized:
+  - `13` split artifacts
+  - `70` run manifests
+  - `70` prediction dumps
+  - `70` training history logs
+  - `6` metrics tables
+  - `2` plot files
+- Final Week 4 pooled primary mean ROC-AUC:
+  - `hetero_gnn = 0.9296`
+  - `logistic_regression = 0.8865`
+  - `mlp = 0.8606`
+- Final Week 4 France transfer mean ROC-AUC:
+  - `source_only = 0.9547`
+  - `dann = 0.9337`
+- Updated the top-level `README.md` with Week 4 commands, output locations, and the headline metric summary.
+- Replaced `paper/outline_v2.md` with a clean Graph v2 / Week 4-aligned outline that removes stale `6 edges`, `redirects_to`, and `M7` wording.
+
+## 2026-04-24 Week 4 Group-Aware Split Correction
+- Updated `configs/week4_experiments.yaml` so pooled primary and same-region split policy is explicit:
+  - `strategy = group_shuffle`
+  - `strategy = group_kfold`
+  - `group_columns = operator_or_case -> brand -> root_domain`
+  - `balance_attempts = 20`
+- Updated `src/train/utils.py` so `make_pooled_primary_split` uses group-aware `GroupShuffleSplit` and same-region sensitivity uses `GroupKFold`.
+- Re-ran pooled primary with the new group-aware splits, producing 5 seeds x 3 models = 15 retrained runs.
+- Re-ran same-region sensitivity with group-aware folds for Belgium, France, and Philippines.
+- Generated refreshed audits:
+  - `output/week4/audits/pooled_primary_group_aware_split_audit.csv`
+  - `output/week4/audits/same_region_group_aware_split_audit.csv`
+- Group-aware retrained pooled primary mean ROC-AUC:
+  - `hetero_gnn = 0.9277`
+  - `logistic_regression = 0.8938`
+  - `mlp = 0.8876`
+- Pooled group-overlap audit is zero for every seed.
+- Pooled `illegal_confirmed_official_cross_verified` distribution is now stable enough for validation:
+  - test has `4-6` rows per seed
+  - val has `4-5` rows per seed
+- Same-region group-overlap audit is zero for Belgium, France, and Philippines.
+- Updated README, paper outline, and experiment manual addenda to state:
+  - Week 4 graph model is the `HeteroConv baseline`
+  - Week 5 HeCo should build incrementally over this baseline
+  - Philippines HeteroConv is borderline after group-aware folding at `ROC-AUC = 0.7889`
+  - cross-verified primary-layer evaluation should be moved to a dedicated Denmark same-region experiment later
+
+## 2026-04-24 Week 5 HeCo Contrastive Completion
+- Added `configs/week5_heco.yaml`.
+- Implemented the Week 5 HeCo model stack:
+  - `src/models/projection_heads.py`
+  - `src/models/view_generators.py`
+  - `src/models/heco_head.py`
+  - `src/train/train_contrastive.py`
+- Ran static compilation for the Week 5 modules.
+- Ran the HeCo smoke test successfully.
+- Ran the full Week 5 temperature grid over `tau = 0.1, 0.3, 0.5, 0.7`.
+- Best temperature by frozen validation ROC-AUC is `tau = 0.7`.
+- Frozen encoder linear probe at `tau = 0.7` reached ROC-AUC `0.9180`, passing the manual `0.90` acceptance threshold.
+- Full fine-tuning reached best ROC-AUC `0.9897` at `tau = 0.3`.
+- Generated Week 5 outputs under `output/week5/`, including:
+  - temperature grid metrics
+  - probe metrics
+  - positive-pair audits
+  - checkpoints
+  - embeddings
+  - t-SNE CSV and plots
+- Regenerated the t-SNE family audit to normalize `ice-cazino` and `icecazino` variants into the `icecasino` family.
+- Updated README and `paper/outline_v2.md` with Week 5 commands, outputs, and result boundaries.
+
+## 2026-04-25 Week 6 Continuation and RQ1 Artifact Completion
+- Resumed after an interrupted turn and checked for live Python/conda processes before continuing.
+- Audited `<user_home>\Desktop\week6.md`, the project schedule, and existing Week 6 outputs.
+- Found that the core Week 6 training had already produced:
+  - five-seed Disc-LR HeCo finetune outputs
+  - five-seed uniform-LR fallback outputs
+  - per-seed tau0.7 HeCo checkpoints
+  - cross-verified pooled evaluation outputs
+  - after-finetune t-SNE outputs
+- Patched `analysis/ablation_week6.py` so it uses the Week 4 group-aware metrics and includes the uniform-LR fallback audit row.
+- Patched `src/train/train_full.py` so uniform-LR manifests record their actual task/model names on future reruns.
+- Re-ran:
+  - `analysis/rq1_cross_verified_eval.py`
+  - `analysis/ablation_week6.py`
+  - static compilation for Week 6 analysis/model/train files
+- Generated the missing Week 6 final artifacts:
+  - `output/week6/metrics/ablation_table.csv`
+  - `output/week6/metrics/week6_acceptance_audit.csv`
+  - `figs/fig4_pooled_auc.pdf`
+  - `paper/draft/sec4_2_rq1.md`
+- Updated README, `paper/outline_v2.md`, `task_plan.md`, and `findings.md` to reflect the honest Week 6 result:
+  - model-level HeCo finetune targets are not met under the current fixed split family
+  - cross-verified RQ1 evidence-layer target is met
+
+## 2026-04-28 Week 7 Transfer Kickoff
+- Restored context from `source_materials/project/task_plan.md`, `findings.md`, `progress.md`, and `<user_home>\Desktop\d.txt`.
+- Checked for existing Week 7 implementation/output state:
+  - no completed Week 7 config or output tree was found
+  - transfer placeholders exist but are empty for StruRW-related modules
+- Verified the conda runtime with `torch` and `torch_geometric` imports under `hetero-transfer-v2`.
+- Verified HeCo checkpoint availability:
+  - seed42 tau0.7 encoder is available from Week 5
+  - seeds43-46 tau0.7 encoders are available from Week 6
+- Added Phase 17 to `task_plan.md` and recorded the target one-class evaluation boundary for Denmark and Ontario.
+
+## 2026-04-28 Week 7 Transfer Implementation and Runs
+- Added `configs/week7_transfer.yaml` with:
+  - transfer pairs T1_Nordic, T2_PH, T2_ON, and T3_DiagnoseFrance
+  - methods source_only, DANN, StruRW, and DANN+StruRW
+  - five seeds `42-46`
+  - HeCo tau0.7 checkpoint fallback paths for Week 6 and Week 5
+  - StruRW pseudo-label threshold `0.7`, edge-weight clip `[0.1, 10.0]`, and two pseudo-label iterations
+- Added `src/transfer/dann.py` with a HeCo DANN wrapper using the existing gradient reversal discriminator.
+- Implemented `src/transfer/strurw_reweight.py` with CSBM-style W-X-W transition estimation and source edge-weight reweighting for the five Graph v2 semantic relations.
+- Added `src/train/train_transfer.py` as the unified Week 7 runner with staged method selection, group-aware source/target splits, one-class target metric handling, manifests, logs, audits, and plots.
+- Ran static compilation for the new Week 7 files.
+- Ran smoke tests on T3_DiagnoseFrance and T2_ON across all four methods, then cleared the smoke output tree before formal runs.
+- Ran formal Week 7 stages in the required order:
+  - `source_only`: 20 runs
+  - `dann`: 20 runs
+  - `strurw` and `dann_strurw`: 40 runs
+- Final output counts:
+  - `output/week7/metrics/transfer_summary.csv`: 80 rows
+  - `output/week7/logs`: 80 CSV logs
+  - `output/week7/runs`: 80 per-run JSON manifests plus one run-level manifest
+  - required Week 7 plots and audits exist
+- Final verification:
+  - required Week 7 output files are present
+  - one-class target runs have undefined ROC-AUC rather than forced AUC values
+  - `src/data/sanity_check.py` passes after Week 7 implementation
+- Errors encountered:
+  - Running multiple `conda run` commands in parallel can collide on conda temporary activation files; subsequent conda checks were run serially.
+  - The first DANN formal pass completed training but failed during final audit merge because an empty pseudo-label CSV caused `pandas.errors.EmptyDataError`; `train_transfer.py` now handles empty CSV merges and DANN was rerun successfully.
+  - Initial StruRW smoke revealed zero high-confidence pseudo labels; the reweighter was corrected so relations with no target pseudo-label co-edge evidence are no-ops instead of being reweighted from a purely Laplace/uniform target estimate.
+
+## 2026-04-28 Week 7 Remediation Kickoff
+- Received the Week 7 remediation plan:
+  - fix early stopping (`>` to `>=` and enforce minimum epochs)
+  - reframe T1 as `illegal_recall_at_youden`
+  - reframe T2_ON as lower-is-better `mean_pred_illegal`
+  - tune DANN warmup/min-epoch settings
+  - optionally switch StruRW pseudo selection to entropy top-30%
+- Added Phase 18 to `task_plan.md` before patching code/config/docs.
+
+## 2026-04-28 Week 7 Remediation Completion
+- Patched `src/train/train_transfer.py`:
+  - early stopping now treats equal validation score as a refreshed best state
+  - DANN can use method-specific `max_epochs` and `min_epochs_before_early_stop`
+  - smoke tests now write to `output/week7_smoke` unless explicitly overridden
+  - T1 and T2_ON primary metrics now use dedicated one-class semantics
+  - StruRW pseudo selection now supports entropy top-fraction selection
+- Patched `configs/week7_transfer.yaml`:
+  - T1 primary metric is `illegal_recall_at_youden`
+  - T2_ON primary metric is lower-is-better `mean_pred_illegal`
+  - DANN warmup is `20` with min epochs `80`
+  - StruRW pseudo-label strategy is `entropy_top_fraction` at `0.30`
+- Ran smoke tests for T1_Nordic, T2_ON, and T3_DiagnoseFrance across all four methods into `output/week7_smoke`.
+- Re-ran formal Week 7 in three stages:
+  - source_only 20 runs
+  - DANN 20 runs
+  - StruRW and DANN+StruRW 40 runs
+- The first remediated StruRW pass emitted entropy numerical warnings because float32 clipping with `1e-12` could round back to 1.0; fixed by casting scores to float64 and clipping to `[1e-7, 1 - 1e-7]`, then reran StruRW and DANN+StruRW without warnings.
+- Final verification:
+  - `output/week7/metrics/transfer_summary.csv` has `80` rows
+  - `output/week7/logs` has `80` logs
+  - `output/week7/runs` has `80` per-run JSON manifests
+  - one-class target AUC remains undefined
+  - `src/data/sanity_check.py` passes
+  - `py_compile` passes for the Week 7 transfer files
+
+## 2026-04-28 Week 7 StruRW/DANN Selection Fix Completion
+- Patched `src/train/train_transfer.py` again to address two remaining training-selection issues:
+  - StruRW prefit stages now run as `pseudo_labeler` stages with `80` max epochs and last-state probability output.
+  - StruRW final stage now runs as `final_classifier` for the full `200` epochs.
+  - DANN best-state selection now masks warmup epochs and only starts from epoch `20`.
+- Patched `configs/week7_transfer.yaml` with:
+  - `strurw.pseudo_labeler_max_epochs = 80`
+  - `strurw.final_max_epochs = 200`
+  - `strurw.final_force_full_epochs = true`
+  - `strurw.final_select_last_state_for_source_only = true`
+  - `dann.mask_warmup_best_state = true`
+- Ran targeted formal validation for `T3_DiagnoseFrance seed42` on `dann`, `strurw`, and `dann_strurw`.
+- Targeted validation showed:
+  - StruRW prefit stages each ran `80` epochs as pseudo-labelers.
+  - StruRW final classifier ran `200` epochs and selected last epoch.
+  - DANN and DANN+StruRW selected best states only after warmup eligibility began at epoch `20`.
+- Reran all affected formal methods across the Week 7 matrix:
+  - DANN: 20 runs
+  - StruRW: 20 runs
+  - DANN+StruRW: 20 runs
+- Final verification:
+  - `output/week7/metrics/transfer_summary.csv` still has `80` rows.
+  - `output/week7/logs` still has `80` CSV logs.
+  - `output/week7/runs` still has `80` per-run JSON manifests.
+  - one-class target AUC remains undefined.
+  - `src/data/sanity_check.py` passes.
+  - `py_compile` passes for Week 7 transfer code.
+
+## 2026-04-28 Week 7 Acceptance Artifact Completion
+- Added and ran `analysis/week7_transfer_acceptance.py`.
+- Generated:
+  - `output/week7/metrics/week7_acceptance_audit.csv`
+  - `output/week7/metrics/transfer_delta_vs_source_only.csv`
+  - `output/week7/plots/week7_delta_heatmap.png`
+  - `paper/draft/sec4_3_week7_transfer.md`
+- The first run failed when pandas `to_markdown()` required the optional `tabulate` package. Resolved by adding a small local Markdown table renderer rather than installing a new dependency.
+- Corrected the delta metric label so `target_mean_pred_illegal_mean` becomes `target_mean_pred_illegal`, not `target_pred_illegal`.
+
+## 2026-04-28 Week 8 Kickoff
+- Corrected the task direction from Week 7 remediation/few-shot placeholders to the Desktop Week 8 mechanism-evidence plan.
+- Read the Week 8 design document, acceptance summary, and predeclared hypotheses.
+- Verified there are no running Python or conda processes left from the interrupted turn.
+- Verified `hetero-transfer-v2` can import torch `2.5.1+cpu`, PyG `2.6.1`, sklearn, pandas, and numpy.
+- Checked that Week 7 outputs are present and complete enough for reuse as E1/E5 transfer split inputs.
+- Checked that HeCo tau0.7 encoder checkpoints are available for all five seeds, with seed42 from Week 5 and seeds43-46 from Week 6.
+- Found no existing Week 8 output tree; only a few zero-byte placeholder modules exist.
+- Added Phase 21 to `task_plan.md` and recorded Week 8 preflight findings before implementation.
+
+## 2026-04-28 Week 8 Implementation and E3 Core Launch
+- Added `configs/week8.yaml` with the W8-E1 through W8-E5 configuration, output paths, frozen transfer pairs, seeds, and predeclared thresholds.
+- Created `output/week8/audits/predeclared_hypotheses.md` from the Desktop source file and recorded `predeclared_freeze_manifest.json`.
+- Implemented:
+  - paired bootstrap utility
+  - Denmark family extractor
+  - E3/E4 multi-scenario finetune driver
+  - E1 edge-channel ablation driver
+  - E5 structure-vs-lexical driver
+  - LogME / H-divergence / sliced-Wasserstein scoring utilities
+  - RQ3 LogME wrapper
+- Static compilation passed for all new Week 8 modules.
+- Family extraction produced 7 LOFO-eligible Denmark families; the audit is saved at `output/week8/audits/E3_dk_family_assignments.csv`.
+- Smoke tests passed and wrote only to `output/week8_smoke/`:
+  - E3 tsars LOFO
+  - E1 T3 `-hosted_on`
+  - E5 T3 `C2_no_cctld`
+  - E4 scenario smoke
+  - E2 LogME pair-score smoke
+- Ran E3 formal core:
+  - `35` raw runs
+  - `7` eligible families
+  - `35` histories, `35` splits, `35` manifests, and `35` prediction files
+- E3 formal outputs generated:
+  - `output/week8/metrics/E3_lofo_family_sensitivity_raw.csv`
+  - `output/week8/metrics/E3_lofo_family_sensitivity.csv`
+  - `output/week8/metrics/E3_acceptance_audit.csv`
+  - `output/week8/plots/E3_family_vs_random.png`
+- E3 core headline:
+  - minimum family mean ROC-AUC is `0.9928`
+  - tsars mean ROC-AUC is `0.9989`
+  - all family AUC std values are below `0.10`
+- Verification after E3:
+  - `src/data/sanity_check.py` passes.
+
+## 2026-04-28 Week 8 Formal Completion
+- Ran E3 permutation in five seed batches:
+  - seed42: 100 runs
+  - seed43: 100 runs
+  - seed44: 100 runs
+  - seed45: 100 runs
+  - seed46: 100 runs
+- Generated:
+  - `output/week8/audits/E3_permutation_aucs.csv`
+  - `output/week8/metrics/E3_family_vs_random_summary.csv`
+  - `output/week8/metrics/E3_permutation_test_summary.csv`
+- Ran E1 edge-channel ablation formal matrix:
+  - `120` raw runs
+  - `output/week8/metrics/E1_edge_ablation_raw_runs.csv`
+  - `output/week8/metrics/E1_edge_ablation_summary.csv`
+  - `output/week8/plots/E1_edge_ablation_heatmap.png`
+- Ran E5 structure-vs-lexical formal matrix:
+  - `100` raw runs
+  - `output/week8/metrics/E5_structure_vs_lexical.csv`
+  - `output/week8/metrics/E5_structure_vs_lexical_summary.csv`
+  - `output/week8/plots/E5_config_bar.png`
+- Ran E4 control-group scenarios:
+  - `15` raw runs
+  - `output/week8/metrics/E4_three_scenario_raw_runs.csv`
+  - `output/week8/metrics/E4_three_scenario_summary.csv`
+  - `output/week8/metrics/E4_embedding_distances.csv`
+  - `output/week8/plots/E4_tsne_three_class.png`
+- Ran E2 LogME transferability scoring and complete-label source-only transfer alignment:
+  - `30` pair-score rows
+  - `30` realized transfer rows over `6` ordered complete-label region pairs
+  - `output/week8/metrics/E2_pair_scores.csv`
+  - `output/week8/metrics/E2_realized_transfer_auc.csv`
+  - `output/week8/metrics/E2_transferability_metrics.csv`
+  - `output/week8/plots/E2_logme_vs_auc.png`
+- Fixed a LogME numerical stability issue:
+  - Initial E2 scoring produced `-inf` LogME values from `log(0)` warnings.
+  - Patched `src/transfer/logme_score.py` to clamp alpha/beta and denominator terms.
+  - Recomputed E2 scores and correlations without non-finite LogME values, reusing the already completed transfer-alignment runs.
+- Generated the final Week 8 acceptance package:
+  - `analysis/week8_acceptance.py`
+  - `output/week8/metrics/week8_acceptance_audit.csv`
+  - `output/week8/metrics/week8_completion_audit.csv`
+  - `paper/draft/sec4_4_week8_mechanism.md`
+- Final completion checks:
+  - `output/week8/runs`: `800` JSON manifests
+  - `output/week8/logs`: `800` history CSVs
+  - all expected Week 8 plots are present
+  - static compilation passes for all new Week 8 modules
+  - `src/data/sanity_check.py` passes
+  - no residual Python/conda process remains
+- Final hypothesis status:
+  - `5` pass
+  - `10` fail
+  - `0` partial
+
+## 2026-04-28 Week 8.5 Patch Kickoff
+- Received methodological review of Week 8:
+  - original E3 LOFO was an illegal-vs-licensed replay rather than a valid family-level generalization test.
+  - E2 paired sample was too small because only complete-label source/target pairs were used.
+  - E4 distance thresholds and E1/E5 hypothesis directions require post-hoc design/document revisions.
+- Added Phase 22 to `task_plan.md`.
+- Recorded that original E3 H_E3a/H_E3b/H_E3c must be treated as `invalid_original_design` until W8.5 balanced/hard-negative replacement is run.
+
+## 2026-04-29 Week 8.5 Patch Completion
+- Patched `src/train/multi_scenario_eval.py` with `E3_W85`:
+  - balanced licensed-negative LOFO
+  - hard illegal-negative family audit
+  - recall@FPR=0.10
+  - score-gap reporting
+- Smoke-tested `E3_W85` on tsars:
+  - balanced licensed-negative AUC `0.9753`
+  - hard illegal-negative AUC `0.5185`
+- Ran formal W8.5 E3:
+  - `70` evaluation rows
+  - `35` training logs
+  - `70` manifests
+  - `70` prediction files
+- Added `analysis/week85_patch.py` for:
+  - expanded E2 one-class-aware pairing
+  - W8.5 post-hoc acceptance audit
+  - W8.5 paper draft section
+- Ran expanded E2:
+  - `150` pair rows
+  - `30` ordered source-target pairs
+  - `3` complete-label source regions
+  - no GNN retraining; only frozen-embedding logistic probes and transferability scores
+- Generated:
+  - `output/week85/metrics/E3_w85_lofo_raw.csv`
+  - `output/week85/metrics/E3_w85_lofo_summary.csv`
+  - `output/week85/metrics/E2_w85_expanded_pair_scores.csv`
+  - `output/week85/metrics/E2_w85_transferability_metrics.csv`
+  - `output/week85/metrics/week85_acceptance_audit.csv`
+  - `paper/draft/sec4_4_week85_patch.md`
+- W8.5 headline results:
+  - Balanced E3 passes, but hard-negative family recognition fails.
+  - Expanded E2 still fails for LogME.
+  - P3/P4 post-hoc revisions produce several interpretation passes but are explicitly not prerun Week 8 passes.
+- Final verification:
+  - `py_compile` passes for patched W8.5 modules.
+  - `src/data/sanity_check.py` passes.
+  - no residual Python/conda process remains.
+
+## 2026-04-30 Phase 23 Kickoff
+- Received prioritized patch plan covering P0 through P6:
+  - security/config repair
+  - corrected E5 into `output/week8_patch/`
+  - Week 6 head ablation
+  - Week 9 few-shot RQ4
+  - formal hard-negative family audit
+  - Week 10 final RQ tables
+  - README and paper updates
+- Restored context from project planning files and memory.
+- Confirmed Week 8.5 already exists and must remain a separate post-hoc correction layer rather than overwriting original Week 8.
+- Found a real bearer token in `.claude/settings.local.json`; replaced it with `<REDACTED_X_BEARER_TOKEN>`.
+- Added `.env.example`.
+- Added `.gitignore` to ignore `.env`, `.claude/settings.local.json`, key/credential files, caches, and large checkpoints.
+
+## 2026-04-30 Phase 23 Completion
+- Confirmed corrected E5 is already implemented and completed under `output/week8_patch/`:
+  - `180` corrected E5 run manifests/logs/predictions
+  - `E5_corrected_acceptance_audit.csv`
+  - `E5_corrected_delta_vs_full.csv`
+- Confirmed Week 6 head ablation is complete under `output/week6_head_ablation/`:
+  - `30` formal runs
+  - `head_ablation_summary.csv`
+  - `attention_collapse_audit.csv`
+  - `head_ablation_checkpoint_audit.csv`
+- Implemented and ran Week 9 few-shot RQ4:
+  - patched `src/transfer/few_shot_finetune.py`
+  - patched `analysis/rq4_fewshot_eval.py`
+  - smoke-tested into `output/week9_smoke/`
+  - formal outputs written to `output/week9/metrics/fewshot_*`
+- Implemented and ran formal Week 9 hard-negative family audit:
+  - added `analysis/week9_hard_negative_family_audit.py`
+  - wrote `hard_negative_family_raw.csv`, `hard_negative_family_summary.csv`, and `hard_negative_family_acceptance.csv`
+- Implemented and ran Week 10 final RQ table generation:
+  - added `analysis/week10_final_rq_tables.py`
+  - wrote `output/week10/metrics/final_rq_evidence_table.csv`
+  - wrote `output/week10/metrics/final_hypothesis_rollup.csv`
+  - wrote `paper/draft/sec5_final_rq_tables.md`
+- Corrected the Week 10 rollup so Week8.5 `P3_posthoc`/`P4_posthoc` rows are explicitly marked `is_posthoc=True`, while Week8.5 P1/P2 remain correction evidence rather than post-hoc hypothesis-direction revisions.
+- Updated documentation:
+  - `README.md`
+  - `paper/outline_v2.md`
+  - `source_materials/project/task_plan.md`
+  - `source_materials/project/findings.md`
+  - `source_materials/project/progress.md`
+- Final Phase 23 metrics to report:
+  - corrected E5 T3 lex-only minus graph-only `0.2396`
+  - fixed_mean head ablation mean ROC-AUC `0.9735`, std `0.0163`
+  - T2_PH few-shot best AUC `0.9250`, delta `+0.2833`
+  - T3 few-shot best AUC `0.9847`, delta `-0.0014`
+  - hard-negative family mean AUC `0.6218`, tsars `0.3864`
+- Final verification:
+  - reran `analysis/week10_final_rq_tables.py` after fixing post-hoc rollup marking
+  - `py_compile` passed for Phase 23 edited/new Python modules
+  - `src/data/sanity_check.py` passed, preserving Graph v2 semantics
+
+## 2026-05-02 Final Cleanup and Reproducibility Pass
+- Performed the requested final cleanup without changing existing experiment metrics or training outputs.
+- Scanned all Python files and found `25` zero-byte files. Added explicit placeholder/package-marker docstrings to each one.
+- Confirmed that no zero-byte Python files remain.
+- Checked README, paper drafts/outline, and task plan for unimplemented method references:
+  - SeHGNN/HINormer remain only as negative clarification that Week 4 did not use those placeholder models.
+  - standalone StruRW/IRM/EERM placeholder files are not referenced as implemented paper methods.
+- Updated README:
+  - retained Windows local conda examples
+  - added relative-path commands such as `python src\train\train_full.py`
+  - documented that full training needs `hetero-transfer-v2`, PyTorch, PyG, Graph v2 data, and saved HeCo checkpoints
+- Added `docs/reproducibility_checklist.md`.
+- Updated `analysis/week10_final_rq_tables.py` and regenerated `paper/draft/sec5_final_rq_tables.md` with lower final claims:
+  - RQ1 mixed support
+  - RQ2 lexical/ccTLD boundary evidence
+  - RQ3 transferability unreliable
+  - RQ4 target-dependent few-shot support
+  - explicit guardrail against broad cross-region generalization claims
+- Added `analysis/final_artifact_audit.py` and ran it.
+- `output/final_artifact_audit.csv` result:
+  - `46` checks
+  - `46` pass
+  - `0` fail
+- The first artifact audit found one expected-count issue for `output/week7/runs` because that directory has `80` per-seed manifests plus one aggregate manifest. The script now counts `*__seed*.json` for that check and passes.
+- Final verification commands completed:
+  - `python -m compileall -q analysis src`
+  - `python src\data\sanity_check.py`
+
+## 2026-05-04 Week 7 / Week 8 Interpretation Boundary Revision
+- Added `analysis/week7_week8_interpretation_revision.py`.
+- Ran the script to generate new interpretation-boundary tables without deleting or overwriting original result matrices.
+- Generated Week 7 revision outputs:
+  - `output/week7/metrics/week7_transfer_summary.csv`
+  - `output/week7/metrics/week7_transfer_taxonomy.csv`
+  - `output/week7/metrics/week7_to_week8_bridge.csv`
+- Generated Week 8 revision outputs:
+  - `output/week8/metrics/E3_lofo_setting_comparison.csv`
+  - `output/week8/metrics/E3_hard_negative_family_summary.csv`
+  - `output/week8/metrics/E5_structure_vs_lexical_corrected_summary.csv`
+  - `output/week8/metrics/week8_diagnostic_rollup.csv`
+- Created documentation:
+  - `docs/week7_transfer_interpretation.md`
+  - `docs/week8_diagnostic_revision.md`
+  - `docs/evidence_boundary_table.md`
+- Created paper draft sections:
+  - `paper/draft/sec_week7_transfer_results.md`
+  - `paper/draft/sec_week8_diagnostic_analysis.md`
+- Updated `README.md` to point to the new interpretation-boundary documents and derived tables.
+- Extended `analysis/final_artifact_audit.py` to check new tables and post-hoc diagnostic markers.
+- Re-ran `analysis/final_artifact_audit.py`; result is `60` pass, `0` fail.
+- Checked paper/README/docs for overclaims:
+  - no claim that Week 7 proves cross-domain structural generalization
+  - no claim that all Week 8 hypotheses were validated
+  - no claim that SeHGNN/HINormer/IRM/EERM/standalone StruRW placeholder files are implemented and verified methods
+
+## 2026-05-04 Superseded Draft Marker Pass
+- Checked old and new Week 7/8 draft files:
+  - old: `paper/draft/sec4_3_week7_transfer.md`
+  - new: `paper/draft/sec_week7_transfer_results.md`
+  - old: `paper/draft/sec4_4_week8_mechanism.md`
+  - new: `paper/draft/sec_week8_diagnostic_analysis.md`
+- Added superseded notes at the top of both old draft files.
+- Updated `README.md` and `MANIFEST.md` with the final paper-safe Week 7/8 interpretation pointer:
+  - `docs/evidence_boundary_table.md`
+  - `paper/draft/sec_week7_transfer_results.md`
+  - `paper/draft/sec_week8_diagnostic_analysis.md`
+- Preserved the old drafts as historical records; no original output result tables were deleted or overwritten.
+- Ran `analysis/final_artifact_audit.py`:
+  - `60` pass
+  - `0` fail
+- Ran recursive `py_compile` over `analysis/` and `src/`; it passed.
+
+## 2026-05-04 Week 9 P0 Kickoff
+- Restored context from `source_materials/project/task_plan.md`, `findings.md`, and `progress.md`.
+- Checked the paper-safe Week 7/8 interpretation artifacts before touching Week 9:
+  - `output/week7/metrics/week7_transfer_taxonomy.csv`
+  - `output/week8/metrics/E5_structure_vs_lexical_corrected_summary.csv`
+- Confirmed existing `output/week9/` contains preliminary few-shot RQ4 outputs from Phase 23; these will be preserved and the formal P0 outputs will use the requested W9_* filenames.
+- Confirmed T2_PH and T3_DiagnoseFrance have binary target-test labels in the Week 7 split files.
+- Confirmed no Week 7 classifier checkpoint files exist, so the current formal Week 9 implementation will document the source+few-shot joint fine-tuning fallback.
+- First audit attempt with default `python` failed due to missing pandas; subsequent verification should run through `hetero-transfer-v2`.
+
+## 2026-05-04 Week 9 P0/P1 Completion
+- Patched `analysis/week9_fewshot_calibration.py` so formal Week 9 outputs include requested schema fields, `training_mode`, `split_file`, success-rate columns, rollup overclaim guardrails, per-run split files, and docs without relying on pandas `to_markdown()`.
+- Smoke-test issue 1: support-audit insertion collided with the existing Week 7 `seed` column. Fixed by preserving the old split seed as `week7_split_seed` and recording Week 9 `seed` plus `checkpoint_seed`.
+- Smoke-test issue 2: rollup assumed both targets were present even in smoke mode. Fixed by skipping empty target groups.
+- Ran formal Week 9:
+  - targets: T2_PH, T3_DiagnoseFrance
+  - shots: 0, 1, 3, 5, 10
+  - seeds: 0, 1, 2, 3, 4
+  - feature conditions: full, no-ccTLD
+- Generated formal metrics:
+  - `output/week9/metrics/W9_E1_fewshot_curve.csv`
+  - `output/week9/metrics/W9_E2_fewshot_seed_stability.csv`
+  - `output/week9/metrics/W9_E3_shortcut_aware_fewshot.csv`
+  - `output/week9/metrics/W9_E3_shortcut_aware_summary.csv`
+  - `output/week9/metrics/week9_fewshot_rollup.csv`
+- Generated formal plots:
+  - `output/week9/plots/W9_T2_PH_shot_curve.png`
+  - `output/week9/plots/W9_T3_France_shot_curve.png`
+  - `output/week9/plots/W9_delta_auc_by_shot.png`
+  - `output/week9/plots/W9_shortcut_condition_comparison.png`
+- Generated docs:
+  - `docs/week9_fewshot_experiment_design.md`
+  - `docs/week9_fewshot_protocol.md`
+  - `paper/draft/sec_week9_fewshot_calibration.md`
+- Ran validation:
+  - custom W9 row/split/leakage checks passed (`100` formal rows, `100` split files, zero support/test overlap)
+  - `analysis/final_artifact_audit.py` under `hetero-transfer-v2`: `75/75` pass
+  - `python -m compileall -q analysis src` under `hetero-transfer-v2`: pass
+- Note: running multiple `conda run` commands in parallel again caused the known Windows temp activation-file collision; rerunning the checks serially resolved it.
+
+## 2026-05-08 Week 9 Result Unification and Expansion
+- Added `configs/week9_fewshot.yaml` with formal base Week 9 targets, shots, seeds, feature conditions, `is_posthoc: true`, future feature-condition expansion list, and authoritative output file list.
+- Patched `analysis/week9_fewshot_calibration.py`:
+  - reads `configs/week9_fewshot.yaml`
+  - supports submatrix reruns
+  - merges rerun rows into existing formal W9 outputs
+  - writes partial rerun progress to `W9_E1_fewshot_curve.partial.csv` instead of clobbering the formal table mid-run
+  - can rebuild formal W9 outputs from run manifests and split files via `--rebuild-from-artifacts`
+  - generates `fewshot_acceptance_audit_v2.csv`
+  - marks old preliminary `fewshot_*` CSVs as legacy
+- Patched `analysis/final_artifact_audit.py` to check:
+  - W9 formal row counts after T2_PH feature expansion
+  - `fewshot_acceptance_audit_v2.csv`
+  - legacy markers on old preliminary Week 9 CSVs
+  - W9 run/log/prediction/split counts after expansion
+- Ran T2_PH expansion:
+  - `no-website-lexical`
+  - `graph-only`
+  - shots 0, 1, 3, 5, 10
+  - seeds 0, 1, 2, 3, 4
+- The first submatrix merge attempt exposed a mid-run clobbering bug because the script wrote the formal W9 table while the submatrix was still running. Fixed it, then rebuilt the formal W9 package from all manifests and split files.
+- Generated/refreshed:
+  - `output/week9/metrics/W9_E1_fewshot_curve.csv` with `150` rows
+  - `output/week9/metrics/W9_E2_fewshot_seed_stability.csv` with `30` rows
+  - `output/week9/metrics/W9_E3_shortcut_aware_summary.csv` with `30` rows
+  - `output/week9/metrics/week9_fewshot_rollup.csv`
+  - `output/week9/metrics/fewshot_acceptance_audit_v2.csv`
+  - refreshed W9 plots and Week 9 docs/paper draft
+- Final validation:
+  - `analysis/final_artifact_audit.py`: `80/80` pass
+  - `python -m compileall -q analysis src`: pass
+  - leakage check: `W9 leakage check passed: rows=150, splits=150, overlap=0`
+- A one-line leakage check initially failed because `conda run python -c` does not support newline-containing arguments on Windows; reran the same check as a single-line command and it passed.
+
+## 2026-05-08 Week 10 Final Freeze Execution
+- Confirmed Phase 29 scope from `task_plan.md`: Week10 is a summary/audit/explanation/freeze layer, not a rerun layer.
+- Inspected existing Week10 files and reran every Week10 script after the formal Week9 expansion:
+  - `analysis/week10_final_rq_tables.py`
+  - `analysis/feature_bucket_transfer.py`
+  - `analysis/week10_ablation_all.py`
+  - `analysis/week10_fewshot_final.py`
+  - `analysis/week10_hard_negative_final.py`
+  - `analysis/week10_deviation_case.py`
+  - `analysis/week10_acceptance_audit.py`
+- Generated/refreshed Week10 metrics:
+  - `final_rq_evidence_table.csv`
+  - `final_hypothesis_rollup.csv`
+  - `feature_bucket_transfer_summary.csv`
+  - `table6_ablation_all.csv`
+  - `fewshot_final_summary.csv`
+  - `hard_negative_family_final_summary.csv`
+  - `deviation_case_index.csv`
+  - `week10_acceptance_audit.csv`
+- Generated/refreshed Week10 tables:
+  - `table_rq1_main_results.csv`
+  - `table_rq2_regional_heterogeneity.csv`
+  - `table_rq3_transfer_boundary.csv`
+  - `table_rq4_fewshot.csv`
+  - `table_ablation_all.csv`
+  - `table_family_boundary.csv`
+- Generated/refreshed Week10 figures:
+  - `fig7_feature_bucket_transfer.pdf`
+  - `fig8_fewshot_curves.pdf`
+  - `fig9_deviation_case.pdf`
+  - `fig10_hard_negative_family.pdf`
+- Verified Week10 acceptance:
+  - `week10_acceptance_audit.csv`: `31/31` pass
+  - all final RQ rows and hypothesis rollup rows have `status`, `is_posthoc`, `paper_safe_claim`, and `paper_forbidden_claim`
+  - final artifact audit: `104/104` pass
+  - recursive `compileall -q analysis src`: pass
+- Claim-boundary text search found only forbidden phrases used in explicit "do not claim" contexts.
+- A parallel conda run again caused a temporary activation-file collision during compileall; serial rerun passed.
+
+## 2026-05-09 Week 11 Aggressive Improvement Execution
+- Restored context from `source_materials/project/task_plan.md`, `findings.md`, and `progress.md`.
+- Read Week11 requirements from `<user_home>\Desktop\files.zip`:
+  - `Week11_实验设计文档.md`
+  - `predeclared_hypotheses.md`
+  - `Week11_验收标准简表.md`
+- Added/updated source files:
+  - `configs/week11.yaml`
+  - `src/models/family_metric_head.py`
+  - `src/train/supcon_sampler.py`
+  - `src/train/train_family_metric.py`
+  - `src/train/train_invariance_methods.py`
+  - `src/train/train_week11_fewshot.py`
+  - `src/transfer/irm_penalty.py`
+  - `src/transfer/eerm_virtual_env.py`
+  - `src/utils/significance_testing.py`
+  - `analysis/week11_significance.py`
+  - `analysis/week11_paper_updates.py`
+  - `analysis/week11_acceptance.py`
+  - `analysis/final_artifact_audit.py`
+- Smoke-tested P1/P2/P3. Fixed two issues:
+  - P1 smoke mode produced no ablation rows when the smoke family was not in the configured ablation family list; added an empty-schema fallback.
+  - P3 support audit collided with the existing Week7 `seed` column; renamed it to `week7_split_seed`.
+- Ran formal P1:
+  - `P1_family_metric_lofo.csv`: `35` rows
+  - `P1_alpha_ablation.csv`: `40` rows
+  - `P1_family_centroid_distance.csv`: `105` rows
+  - `P1_family_tsne.png` generated
+- Ran formal P2:
+  - `45` new IRM/EERM rows
+  - `P2_method_comparison.csv`: `125` rows after combining Week7 context
+  - `P2_eerm_K_sensitivity.csv`: `4` rows
+  - `P2_irm_convergence.png` generated
+- Ran formal P3:
+  - `P3_full_fewshot_matrix.csv`: `100` rows
+  - `40` new one-class few-shot split files
+  - `P3_oneclass_support_samples.csv` generated
+  - `P3_fewshot_curves.png` generated
+- Ran P4 significance testing:
+  - `P4_w7_method_pairwise.csv`: `24` rows
+  - `P4_w9_fewshot_significance.csv`: `8` rows
+  - `P4_w11_overall_significance.csv`: `5` rows
+- Ran P5 paper update:
+  - `paper/draft/sec3_methods_deepened_week11.md`
+  - `paper/draft/sec4_1_rq1_family_metric_week11.md`
+  - `paper/draft/sec4_3_rq3_invariance_methods_week11.md`
+  - `paper/draft/sec4_4_rq4_full_fewshot_week11.md`
+  - `paper/draft/sec5_honest_evidence_boundary_framework.md`
+  - `output/week11/plots/P5_evidence_boundary_diagram.png`
+- Ran Week11 acceptance:
+  - `week11_acceptance_audit.csv`: `9` pass, `6` fail
+  - failed hypotheses are P1 H_P1a/b/c/d and P3 H_P3a/H_P3c
+  - P2, P4, and P5 pass; P3 H_P3b passes
+- Ran final verification:
+  - `analysis/final_artifact_audit.py`: `128/128` pass
+  - `python -m compileall -q src analysis`: pass
+  - P3 split leakage check: `40` split files, `0` support/test overlaps

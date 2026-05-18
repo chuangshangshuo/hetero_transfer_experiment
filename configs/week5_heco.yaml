@@ -1,0 +1,113 @@
+workspace_root: <workspace_root>
+
+data:
+  graph_pt: data/graphs/hetero_graph_v2.pt
+  graph_metadata: data/graphs/hetero_graph_v2_metadata.json
+  master_site_registry: data/master_site_registry.csv
+  node_feature_schema: data/node_feature_schema.json
+
+output:
+  root: output/week5
+  splits: output/week5/splits
+  runs: output/week5/runs
+  metrics: output/week5/metrics
+  predictions: output/week5/predictions
+  plots: output/week5/plots
+  logs: output/week5/logs
+  audits: output/week5/audits
+  embeddings: output/week5/embeddings
+  checkpoints: output/week5/checkpoints
+
+tasks:
+  primary_label_space:
+    - licensed_baseline
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  positive_label_tiers:
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  excluded_tiers:
+    - gray_candidate_minimum
+    - gray_candidate_strong
+    - control_legal_commercial
+  same_region_jurisdictions:
+    - Belgium
+    - France
+    - Philippines
+  transfer_pooled_to_france:
+    target_jurisdiction: France
+    source_excluded_jurisdiction: France
+
+seeds:
+  - 42
+
+splits:
+  pooled_primary:
+    train_fraction: 0.70
+    val_fraction: 0.15
+    test_fraction: 0.15
+    strategy: group_shuffle
+    group_columns:
+      - operator_or_case
+      - brand
+      - root_domain
+    balance_attempts: 20
+
+runtime:
+  exclude_isolated_websites: true
+  use_edge_weight: true
+  validate_no_all_zero_feature_columns: true
+  full_batch: true
+  device: auto
+
+heco:
+  hidden_dim: 64
+  projection_dim: 64
+  dropout: 0.30
+  temperatures:
+    - 0.1
+    - 0.3
+    - 0.5
+    - 0.7
+  top_k_positive: 10
+  min_metapath_support: 1
+  hard_negative_ratio: 0.30
+  pretrain_epochs: 200
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  patience: 30
+  metapaths:
+    M1_W_IP_W: hosted_on
+    M2_W_Cert_W: uses_cert
+    M3_W_NS_W: uses_ns
+    M4_W_ExtRef_W: referenced_by
+
+probe:
+  frozen_linear:
+    lr: 1.0e-2
+    weight_decay: 1.0e-4
+    max_epochs: 200
+    patience: 25
+  full_finetune:
+    lr: 5.0e-4
+    weight_decay: 1.0e-4
+    max_epochs: 200
+    patience: 25
+
+visualization:
+  tsne_perplexity: 30
+  tsne_random_state: 42
+  denmark_family_keywords:
+    - tsars
+    - icecasino
+    - verdecasino
+
+metrics:
+  primary: roc_auc
+  secondary:
+    - pr_auc
+    - balanced_accuracy
+    - macro_f1
+
+acceptance_thresholds:
+  frozen_linear_probe_auc_min: 0.90

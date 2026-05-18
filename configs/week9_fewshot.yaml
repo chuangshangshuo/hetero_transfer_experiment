@@ -1,0 +1,38 @@
+targets:
+  - T2_PH
+  - T3_DiagnoseFrance
+
+shots:
+  - 0
+  - 1
+  - 3
+  - 5
+  - 10
+
+seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+
+feature_conditions:
+  - full
+  - no-ccTLD
+
+is_posthoc: true
+
+future_feature_conditions:
+  - full
+  - no-ccTLD
+  - no-website-lexical
+  - graph-only
+
+model_config: configs/week8.yaml
+training_mode: heco_encoder_checkpoint_source_plus_balanced_target_joint_finetune
+source_baseline_table: output/week8_patch/metrics/E5_structure_vs_lexical.csv
+authoritative_outputs:
+  - output/week9/metrics/W9_E1_fewshot_curve.csv
+  - output/week9/metrics/W9_E2_fewshot_seed_stability.csv
+  - output/week9/metrics/W9_E3_shortcut_aware_summary.csv
+  - output/week9/metrics/week9_fewshot_rollup.csv

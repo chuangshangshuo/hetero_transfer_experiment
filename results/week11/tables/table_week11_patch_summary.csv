@@ -1,0 +1,6 @@
+patch,num_hypotheses,num_pass,num_fail,is_prerun_frozen
+P1_family_metric,4,0,4,True
+P2_invariance_methods,3,3,0,True
+P3_full_fewshot,3,1,2,True
+P4_significance,2,2,0,True
+P5_writing,3,3,0,True

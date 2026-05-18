@@ -1,0 +1,125 @@
+实验执行手册 v2.1（Graph v2 修订版）
+
+A. 最终图 Schema
+
+A.1 节点类型（6 类）
+
+- Website
+- IP
+- Certificate
+- NameServer
+- Registrar
+- ExternalReference
+
+不进入主图的节点：
+
+- PromotionAccount：已归档，作为合规证据链保留，不进入主图。
+- App：仅作案例材料，不进入主图。
+- Brand / Operator：折叠进 Website 属性。
+- ASN：折叠进 IP 属性，不单独建节点。
+
+A.2 语义边类型（5 类）
+
+- hosted_on：Website -> IP
+- uses_cert：Website -> Certificate
+- uses_ns：Website -> NameServer
+- registered_via：Website -> Registrar
+- referenced_by：Website -> ExternalReference
+
+说明：
+
+- redirects_to 不再进入正式图建模，只保留 redirect audit。
+- PyG 训练产物显式物化 5 条反向边，因此 `.pt/.npz` 中共有 10 个 edge types。
+
+A.3 Metapath
+
+核心 4 条：
+
+- M1 = W-IP-W
+- M2 = W-Cert-W
+- M3 = W-NS-W
+- M4 = W-ExtRef-W
+
+扩展 2 条（消融）：
+
+- M5 = W-Registrar-W
+- M6 = W-IP-NS-IP-W
+
+B. Week 3 图构建口径
+
+B.1 Website 特征
+
+- Website.x 只保留 7 维结构特征。
+- 标签列 `label_illegal / label_licensed / label_gray / label_control` 仅作为 metadata 保留，绝不进入训练特征。
+- 所有训练特征统一用 `feat_*` 命名。
+
+B.2 边去重与权重
+
+- 所有 active edge 先按 `(src_id, dst_id)` 唯一化。
+- 每条唯一边保留 `edge_count_raw`。
+- 基础权重统一为 `log1p(edge_count_raw)`。
+- `referenced_by` 额外乘 `1 / dst_degree`，缓解 ExtRef hub 主导问题。
+
+B.3 redirect 审计
+
+- redirect 仅输出审计，不入图。
+- 当前固定审计链路：
+  - `raw_hops_total = 166`
+  - `raw_cross_domain_hops = 11`
+  - `normalized_cross_site_hops = 7`
+  - `mapped_to_graph_pairs = 0`
+
+B.4 孤立节点
+
+- 当前有 38 个孤立 Website 节点。
+- 分布固定为 Italy 26、France 12。
+- 全部保留在图中，但 `exclude_from_training_default = 1`。
+
+C. Week 3 交付物
+
+- `data/graphs/hetero_graph_v2.npz`
+- `data/graphs/hetero_graph_v2.pt`
+- `data/graphs/hetero_graph_v2_metadata.json`
+- `data/versions/feature_builder_state.json`
+- `data/versions/hetero_graph_v2.sha256`
+- `data/master_site_registry.csv`
+- `data/duplicate_audit.csv`
+- `data/node_feature_schema.json`
+- `data/edge_schema.json`
+- `data/audits/redirect_audit.csv`
+- `data/audits/edge_dedup_summary.csv`
+- `data/audits/isolated_website_nodes.csv`
+- `data/audits/extref_hub_audit.csv`
+- `data/audits/website_tier_backfill_audit.csv`
+
+D. Week 3 验收基线
+
+- Website 节点数：623
+- Website.x：`(623, 7)`
+- hosted_on：1516
+- uses_cert：519
+- uses_ns：1662
+- registered_via：252
+- referenced_by：57
+- `.pt` 中 edge types 数量：10
+
+E. 构建命令
+
+```powershell
+& "<user_home>\anaconda3\Scripts\conda.exe" run --no-capture-output -n hetero-transfer-v2 python <workspace_root>\src\data\build_hetero_graph.py
+```
+
+```powershell
+& "<user_home>\anaconda3\Scripts\conda.exe" run --no-capture-output -n hetero-transfer-v2 python <workspace_root>\src\data\convert_npz_to_pyg.py
+```
+
+F. Week 4 addendum
+
+- Week 4 graph model is the `HeteroConv baseline`; it is not `SeHGNN` or `HINormer`.
+- Week 5 HeCo contrastive learning must be implemented as an incremental method over this baseline.
+- Pooled primary splits are group-aware by `operator_or_case`; blank `operator_or_case` values fall back to `root_domain`.
+- Group-aware split audit: `output/week4/audits/pooled_primary_group_aware_split_audit.csv`.
+- Group-aware reaggregated score summary: `output/week4/metrics/pooled_primary_group_aware_reaggregated_summary.csv`.
+- Group-aware reaggregated metrics reuse existing Week 4 prediction scores and are not retrained group-aware model metrics.
+- Philippines same-region HeteroConv acceptance threshold is `ROC-AUC >= 0.80`; do not use the older phase2 `0.88` threshold for Graph v2 / v4-tier Week 4 acceptance.
+- `illegal_confirmed_official_cross_verified` primary-layer evaluation should be handled as a dedicated Denmark same-region experiment rather than over-interpreting pooled split counts.

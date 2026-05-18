@@ -1,0 +1,8 @@
+scope,criterion,observed,threshold,passed
+disc_lr,pooled_auc_mean_min,0.9321514888634772,0.95,False
+disc_lr,pooled_auc_std_max,0.0715583025334608,0.04,False
+disc_lr,heterognn_delta_auc_min,0.004412539625245238,0.02,False
+uniform_lr_fallback,pooled_auc_mean_min,0.9337107842939232,0.95,False
+uniform_lr_fallback,pooled_auc_std_max,0.0740180393722444,0.04,False
+uniform_lr_fallback,heterognn_delta_auc_min,0.00597183505569121,0.02,False
+cross_verified,cross_verified_auc_min,0.9797619047619048,0.95,True

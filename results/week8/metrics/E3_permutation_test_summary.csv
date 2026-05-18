@@ -1,0 +1,2 @@
+﻿"real_mean","random_mean","real_minus_random","one_sided_p_real_lower","one_sided_p_real_higher","interpretation"
+"0.997348505797983","0.997858026345831","-0.00050952054784803","0.16","0.84","permutation_does_not_show_real_families_are_harder_than_random"

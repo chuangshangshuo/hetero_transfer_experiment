@@ -1,0 +1,813 @@
+# Findings
+
+## 2026-04-14 to 2026-04-15 Context
+- Phase2 already had a stable evidence library with `licensed_baseline`, `gray_candidate`, `illegal_confirmed`, entity resolution, source registry, evidence ledger, negative license checks, candidate expansion edges, and sample summaries.
+- Follow-up domain-level staging already existed in `<workspace_root>\phase2\data\followup\`, including site profile, infra relations, content features, redirect/payment cues, and strong-edge audit.
+- Discovery-related inputs remained sparse and same-origin heavy, so they were useful for candidate discovery and diversity scoring, but not reliable as a main graph layer.
+
+## 2026-04-15 V4 Tightening Results
+- The v4 run further tightened the second stage away from density-first interpretation and toward anomaly/deviation-first interpretation.
+- Final v4 tiers are now `licensed_baseline=89`, `gray_candidate_minimum=2`, `gray_candidate_strong=8`, `illegal_confirmed_official_single=112`, and `illegal_confirmed_official_cross_verified=33`.
+- `cross_source_validation_audit.csv` now exposes `analysis_role`, `cross_source_strong_subtype`, `strong_pass_basis`, and `strong_pass_confidence` in addition to cluster/diversity counts and minimum/strong pass flags.
+- `gray_candidate_minimum` rows are now explicitly `weak_strong_borderline` instead of being allowed to look like true strong tiers.
+- `gray_candidate_strong` remains candidate-only and is now justified by archive/infrastructure strength, non-discovery breadth, or relation support to `illegal_confirmed_official_cross_verified`.
+- `illegal_confirmed_official_cross_verified` is now materially stricter: official basis plus a non-official independent cluster and at least one strong reinforcement layer.
+- New v4 sample-quality outputs now exist at the top level:
+  - `osint_strength_profile_summary.csv`
+  - `discovery_source_diversity_summary.csv`
+  - `discovery_origin_family_summary.csv`
+  - `gray_candidate_relation_support_summary.csv`
+- New v4 anomaly outputs now exist at the top level:
+  - `strong_weak_mix_summary.csv`
+  - `baseline_deviation_scores.csv` with decomposed group scores
+  - `deviation_feature_contribution.csv`
+- `candidate_expansion_edges.csv` remains hard-locked to gray-only semantics and does not auto-upgrade illegal tiers.
+
+## 2026-04-15 Combined Report Results
+- A new report builder script now generates two integrated outputs from the tightened v4 tables:
+  - `第二阶段_v4综合汇报简版.docx`
+  - `第二阶段_v4综合详细版.docx`
+- The short report is presentation-oriented and emphasizes:
+  - experimental purpose
+  - methods
+  - proof chain
+  - conclusions
+  - limitations
+- The detailed report is documentation-oriented and explicitly covers:
+  - data sources
+  - data statistics
+  - processing and statistical methods
+  - extracted feature groups
+  - input/output tables and field roles
+  - algorithms and parameters
+  - stable findings versus current limitations
+- Both reports were rendered with LibreOffice and their PDFs passed a text sanity check with `question_mark_triplets=0`.
+
+## 2026-04-15 Full Stage-1 Report Results
+- The reporting scope was corrected to cover the full first-stage experimental program rather than phase2-only outputs.
+- A new report builder script now generates two stage-wide outputs:
+  - `第一阶段综合实验报告_汇报简版.docx`
+  - `第一阶段综合实验报告_详细版.docx`
+- The stage-wide reports integrate:
+  - phase1 matched-main results
+  - legal commercial control vs licensed gambling comparisons
+  - phase2 gray/illegal evidence-layer results
+  - follow-up experiment 1 and experiment 2 extensions
+- The short report is now presentation-oriented around:
+  - research goals
+  - methods
+  - proof chain
+  - conclusions
+  - whether the stage goals were achieved
+- The detailed report now documents:
+  - data sources
+  - sample statistics
+  - preprocessing and statistical methods
+  - feature extraction
+  - input/output tables and field roles across phase1 / phase2 / followup
+  - algorithms and parameters
+  - stable findings versus partial or still-unstable results
+- Both stage-1 reports were rendered with LibreOffice and their PDFs also passed a text sanity check with `question_mark_triplets=0`.
+
+## 2026-04-15 Git-Style Packaging Results
+- A clean repository-style directory now exists at `<workspace_root>\git`.
+- The package keeps only the files that are useful for reproducibility, reporting, audit, and handoff:
+  - phase1 scripts and formal outputs
+  - phase2 evidence-tier and anomaly/deviation outputs
+  - final and archival reports
+  - project-level planning / findings / progress files
+- Temporary and intermediate outputs were deliberately excluded, including:
+  - `tmp/`
+  - `__pycache__/`
+  - large draw-level bootstrap dumps
+  - full staging caches such as `phase2_followup_*_full.csv`
+- The new folder includes a top-level `README.md` plus `.gitignore`, so it can be used as a future GitHub import base without another cleanup round.
+
+## 2026-04-16 RLS / Hidden-Column Analysis
+
+## 2026-04-20 Experimental Report PPT Findings
+- The experimental report deck is based on phase1 / phase2 formal outputs rather than temporary staging caches.
+- Phase1 summary used in the deck:
+  - three licensed-gambling jurisdictions: Philippines 19 sites, Spain 30 sites, Sweden 20 sites
+  - matched-main sample size: 68 groups
+  - gambling-vs-control structure-only permutation result: observed AUC 0.7025, p=0.013
+  - graph views: infra view has 68 nodes and 422 edges; combined strong view has 25 audited strong edges
+- Phase2 v4 summary used in the deck:
+  - tiers: licensed_baseline 89, gray_candidate_minimum 2, gray_candidate_strong 8, illegal_confirmed_official_single 112, illegal_confirmed_official_cross_verified 33
+  - gray strong candidates remain candidate-only despite higher diversity/deviation
+  - illegal cross-verified samples have official basis plus independent non-official support and strong reinforcement
+  - main interpretation prioritizes anomaly/deviation over density-first conclusions
+- Follow-up summary used in the deck:
+  - PH licensed-vs-illegal structure layer AUC 0.899
+  - domain pooled structure layer AUC 0.921
+  - sensitive audit upper-bound AUC 0.974, treated as leakage/boundary audit
+  - discovery layer coverage ratio is 0.0462, so it remains sparse discovery evidence
+- In `死锁问题扩展.docx`, the first failure mode is not a real DB deadlock; it is a permission dependency: the RLS predicate reads `username`, but ordinary users were not granted `SELECT` on `username`, so policy evaluation itself fails with `permission denied`.
+- The document's "方案二" avoids that first problem by switching the predicate to `emp_no = substring(current_user, 5)::int`, which only depends on a visible column.
+- However, "方案二" still queries the base table with `SELECT * FROM t_emp_salary;` while ordinary users were granted only `SELECT (id, emp_no, emp_name, department, salary, performance)`. `SELECT *` still asks for `username`, so it will continue to fail due to column privilege checks.
+- So the durable fix is to separate:
+  - access control on the base table
+  - presentation of visible columns to end users
+- Recommended redesign principle:
+  - keep the identifying column (`username` or `owner_role`) only in the base table
+  - do not let ordinary users query the base table directly
+  - expose either a filtered view or a `SECURITY DEFINER` function that returns only non-sensitive columns and filters rows by the caller identity
+- If a `SECURITY DEFINER` function is used, row filtering should use `session_user` instead of `current_user`, because `current_user` becomes the function owner inside a definer-security context.
+ 
+## 2026-04-20 Six-Region Neutral Stability Expansion Findings
+- Official-source fetchability for the six-region expansion was good enough to execute without scraping non-official gambling pages:
+  - France ANJ licensed operators and ANJ blocked-site CSV were directly usable.
+  - Germany GGL Whitelist was directly usable.
+  - Italy ADM blocked-site page resolved to the current `ListaSitiIllegali` TXT attachment.
+  - Belgian Gaming Commission illegal list was directly usable; A+/B+/FA+ licence JSON was usable with an unverified SSL fallback recorded in audit.
+  - UKGC public register exposed downloadable active domain-name CSVs.
+  - iGaming Ontario regulated operator/site page was directly usable.
+- The expanded frozen sample contains 401 rows:
+  - licensed baseline: France 24, Germany 40, Belgium 29, United Kingdom 40, Ontario 60.
+  - illegal confirmed official single: France 60, Italy 60, Belgium 40.
+  - legal commercial controls: 8 per region across all six regions.
+- Experiment 1 expansion result is mixed but mostly directionally compatible:
+  - Belgium, Germany, Ontario, and United Kingdom are partial support.
+  - France is opposite/unsupported under the current neutral domain-structure-only proxy.
+  - Italy is insufficient because this pass did not find a directly usable ADM licensed-domain source.
+- Experiment 2 expansion result is stronger for the regions with official illegal sources:
+  - Belgium, France, and Italy support the original baseline-deviation interpretation.
+  - Germany, Ontario, and United Kingdom are insufficient for experiment 2 because this pass intentionally did not construct illegal samples without official illegal-domain evidence.
+- Evidence quality remains only partial support:
+  - Official illegal evidence is strong at the single-source level.
+  - The selected frozen sample did not produce official cross-jurisdiction duplicate domains, so no rows were upgraded to `illegal_confirmed_official_cross_verified`.
+  - This is intentionally reported as partial support rather than overstated.
+
+## 2026-04-21 Infrastructure Enhancement Findings
+- Experiment 1 is stronger when evaluated as infrastructure control-deviation rather than raw domain lexical score:
+  - Belgium: AUC 0.793, partial support.
+  - France: AUC 0.690, partial support after moving to DNS/TLS/RDAP control-deviation.
+  - Ontario: AUC 0.742, partial support.
+  - United Kingdom: AUC 0.744, support.
+  - Germany: AUC 0.547, evidence insufficient under the stricter threshold.
+  - Italy: evidence insufficient because no ADM-verified licensed-domain baseline was added.
+- France's original domain-lexical reversal has a concrete mechanism:
+  - France licensed baseline local-TLD rate is 1.00.
+  - France legal-commercial control local-TLD rate is 0.50.
+  - The lexical proxy penalizes local TLD, so the `.fr`-heavy licensed sample is mechanically pushed downward.
+- Experiment 2 remains directionally compatible under the four-dimensional deviation bridge:
+  - Belgium supports the original conclusion.
+  - France partially supports it.
+  - Italy supports it when compared to the pooled licensed baseline, but not as a primary same-region licensed comparison.
+  - Germany, Ontario, and the United Kingdom remain evidence-insufficient for experiment 2 because no official illegal sample was frozen for those jurisdictions.
+- The pooled licensed-vs-illegal audit should be described carefully:
+  - Original published reference AUC remains 0.921.
+  - The frozen-weight recomputation over original formal samples gives 0.781.
+  - After adding expansion samples, frozen-weight AUC is 0.638.
+  - This is not a direct refit or proof of degradation; it shows the fixed original feature-weight recipe is not automatically stable under expanded jurisdictions.
+- Italy same-region comparison is not promoted to the primary conclusion:
+  - A sensitivity-only candidate run gives AUC 0.927.
+  - It remains excluded from the main licensed baseline until a current ADM official authorized-domain registry can be verified.
+
+## 2026-04-24 Week 4 Planning Findings
+- Graph v2 is already sufficient as a supervised-training substrate:
+  - `data/graphs/hetero_graph_v2.pt` exists.
+  - `data/graphs/hetero_graph_v2_metadata.json` records the final `6 node types / 5 semantic relations / 10 materialized PyG edge types` schema.
+  - `data/master_site_registry.csv` already carries `jurisdiction`, `sample_tier`, binary label columns, and `exclude_from_training_default`.
+- The current Week 4 bottleneck is implementation, not data availability:
+  - `src/models/*`, `src/train/*`, `src/transfer/*`, and `src/explain/*` are still zero-byte placeholders.
+  - So Week 4 must first establish data loading, split generation, baseline models, and evaluation scripts before any transfer-learning claims can be made.
+- Current label composition supports a clear primary pooled task:
+  - `licensed_baseline = 275`
+  - `illegal_confirmed_official_single = 223`
+  - `illegal_confirmed_official_cross_verified = 33`
+  - `gray_candidate_minimum = 2`
+  - `gray_candidate_strong = 8`
+  - `control_legal_commercial = 82`
+- Same-region binary licensed-vs-illegal baselines are currently viable for:
+  - Belgium: `29 licensed`, `40 illegal`, `8 control`
+  - France: `24 licensed`, `60 illegal`, `8 control`
+  - Philippines: `19 licensed`, `14 illegal`, `8 control`
+- Several jurisdictions are not yet balanced enough for primary same-region binary training:
+  - Denmark has illegal and gray samples but no licensed baseline.
+  - Italy has illegal plus control only, and `26` of its illegal-single websites are isolated.
+  - Germany, Ontario, and the United Kingdom are currently licensed/control heavy without official illegal samples in Graph v2.
+- The isolated-node audit matters for Week 4 evaluation:
+  - `38` Website nodes are default-excluded from training.
+  - They are all `illegal_confirmed_official_single`, split as `Italy 26` and `France 12`.
+- `paper/outline_v2.md` is stale relative to Graph v2:
+  - It still mentions `6 edges`, `redirects_to`, and `M7 = W-redirect-W`.
+  - This must be aligned before formal Week 4 method-writing, or the experiment code and paper narrative will drift.
+
+## 2026-04-24 Week 4 Baseline and First Transfer Results
+- Week 4 is now fully runnable from the canonical workspace through:
+  - `src/train/train_single.py`
+  - `src/train/train_transfer_dann.py`
+  - `configs/week4_experiments.yaml`
+- The reusable Week 4 training interface now loads Graph v2 `.pt` plus `master_site_registry.csv`, validates `edge_weight` on every materialized edge type, and fail-fast checks all-zero feature columns before training.
+- Formal pooled primary task:
+  - label space is fixed to `licensed_baseline` vs `illegal_confirmed_official_single + illegal_confirmed_official_cross_verified`
+  - `gray_candidate_*`, `control_legal_commercial`, and all `exclude_from_training_default=1` websites are excluded from formal training and evaluation
+  - 5-seed mean ROC-AUC:
+    - `hetero_gnn = 0.9296`
+    - `logistic_regression = 0.8865`
+    - `mlp = 0.8606`
+- Same-region sensitivity results:
+  - Belgium ROC-AUC mean:
+    - `logistic_regression = 0.9708`
+    - `hetero_gnn = 0.9500`
+    - `mlp = 0.8325`
+  - France ROC-AUC mean:
+    - `logistic_regression = 0.9608`
+    - `hetero_gnn = 0.9067`
+    - `mlp = 0.9208`
+  - Philippines ROC-AUC mean:
+    - `logistic_regression = 0.9333`
+    - `hetero_gnn = 0.8611`
+    - `mlp = 0.7833`
+- First transfer experiment is now fixed as `Pooled excluding France -> France`, not `Spain -> France`.
+- France transfer 5-seed mean ROC-AUC:
+  - `source_only = 0.9547`
+  - `dann = 0.9337`
+- In this Week 4 implementation, `source_only` remains slightly stronger than `DANN` on the current France split family, so Week 4 should describe DANN as a first comparison method rather than as an automatic improvement.
+- Week 4 output tree now exists at `output/week4/` with:
+  - `metrics/`
+  - `predictions/`
+  - `runs/`
+  - `logs/`
+  - `plots/`
+
+## 2026-04-24 Week 4 Group-Aware Split Correction
+- The pooled primary split generator now uses group-aware splitting by `operator_or_case -> brand -> root_domain`.
+- The config now includes `output.week4.audits`, `balance_attempts = 20`, and the same group key chain for pooled primary and same-region sensitivity.
+- Five pooled primary split artifacts were regenerated under `output/week4/splits/`.
+- The new group-aware split audit shows zero group overlap across train/val/test for all five seeds.
+- Cross-verified samples are now present in both validation and test for every pooled seed:
+  - test: `4-6` rows per seed
+  - val: `4-5` rows per seed
+- The pooled primary 5 seed x 3 model set was retrained on the new group-aware splits:
+  - `hetero_gnn = 0.9277`
+  - `logistic_regression = 0.8938`
+  - `mlp = 0.8876`
+- Same-region sensitivity now uses `GroupKFold` and group-aware validation splitting:
+  - Belgium logistic ROC-AUC = `0.9649`
+  - France logistic ROC-AUC = `0.9822`
+  - Philippines logistic ROC-AUC = `0.9583`
+  - Philippines HeteroConv ROC-AUC = `0.7889`, so this is now borderline and should not be described as a clean pass.
+- Week 4 graph model positioning was clarified:
+  - the current model is the `HeteroConv baseline`
+  - it is not SeHGNN or HINormer
+  - Week 5 HeCo should be implemented incrementally over this baseline
+- The `illegal_confirmed_official_cross_verified` primary-layer evaluation should be separated into a Denmark same-region experiment later, rather than over-interpreted from pooled split counts alone.
+
+## 2026-04-24 Week 5 HeCo Findings
+- Week 5 implements a HeCo-style co-contrastive pretraining module over Graph v2.
+- The schema view reuses the weighted HeteroConv pattern from the Week 4 HeteroConv baseline.
+- The metapath view aggregates the four core metapaths:
+  - `W-IP-W`
+  - `W-Cert-W`
+  - `W-NS-W`
+  - `W-ExtRef-W`
+- Positive pairs are mined from top-k metapath co-occurrence only; `sample_tier`, `jurisdiction`, and labels are not used for positive mining.
+- The temperature grid completed for `tau = 0.1, 0.3, 0.5, 0.7`.
+- Best frozen-linear validation result selected `tau = 0.7`.
+- Frozen encoder linear probe result at `tau = 0.7`:
+  - ROC-AUC `0.9180`
+  - passes manual threshold `0.90`
+- Full fine-tune best result:
+  - ROC-AUC `0.9897` at `tau = 0.3`
+- The metapath-positive audit records:
+  - `2594` positive pairs
+  - average `4.16` positive targets per Website
+- t-SNE family audit confirms Denmark family markers are present:
+  - `tsars = 9`
+  - `icecasino = 6`
+  - `verdecasino = 4`
+- Week 5 should be reported as a pretraining/probing module, while the Week 6 integrated model should be the place where `HeteroGNN + HeCo` is trained as a unified downstream model.
+
+## 2026-04-25 Week 6 RQ1 Findings
+- Week 6 implementation and outputs already existed after the interrupted run; this continuation audited and completed the missing paper/table artifacts.
+- HeCo fine-tune results under the fixed group-aware split family:
+  - Disc-LR HeCo finetune ROC-AUC mean `0.9322`, std `0.0716`
+  - uniform-LR fallback ROC-AUC mean `0.9337`, std `0.0740`
+  - HeteroGNN-only Week 4 baseline ROC-AUC mean `0.9277`, std `0.0750`
+- The integrated HeCo finetune variants do not meet the Week 6 model-level acceptance targets:
+  - pooled mean AUC target `>=0.95`
+  - pooled std target `<=0.04`
+  - delta over HeteroGNN target `>=+0.02`
+- The outlier is seed46:
+  - Disc-LR seed46 ROC-AUC `0.7914`
+  - uniform-LR seed46 ROC-AUC `0.7872`
+  - seed46 has balanced train/val/test labels and no group overlap, so this is not a simple split-integrity failure.
+- The RQ1 cross-verified evidence layer is strong:
+  - pooled 5-seed cross_verified vs licensed ROC-AUC `0.9798`
+  - each seed has at least `4` cross-verified test rows, passing the configured minimum of `3`
+- The correct Week 6 paper stance is mixed:
+  - use the cross-verified evidence-layer result as the strong RQ1 evidence result
+  - do not claim the integrated HeCo finetune model is a locked improvement over HeteroGNN-only yet
+
+## 2026-04-28 Week 7 Transfer Preflight Findings
+- Week 7 had not been implemented yet: `src/train/train_transfer_strurw.py` and `src/transfer/strurw_reweight.py` were zero-byte placeholders, and no `output/week7` result tree existed.
+- The existing Week 4 DANN code is a HeteroConv transfer baseline; Week 7 should reuse its gradient reversal/domain discriminator idea but train through the Week 6 HeCo fine-tune encoder stack.
+- Week 6 checkpoints are available for seeds `43-46` as `output/week6/checkpoints/heco_encoder__tau0.7__seed*.pt`; seed `42` is available through the Week 5 fallback `output/week5/checkpoints/heco_encoder__tau0.7__seed42.pt`.
+- The local conda environment `hetero-transfer-v2` successfully imports PyTorch `2.5.1+cpu` and PyG `2.6.1`.
+- The current registry reveals target-label boundary cases:
+  - Denmark target has confirmed-illegal samples but no licensed baseline.
+  - Ontario target has licensed baseline samples but no confirmed-illegal samples.
+  - Therefore ROC-AUC must be recorded as undefined for those one-class targets instead of being forced.
+- `rg` remains unusable on this machine due to access-denied errors, so PowerShell recursive listing is used for local code discovery.
+
+## 2026-04-28 Week 7 Transfer Results
+- Week 7 implemented and completed the full `4 transfer pairs x 4 methods x 5 seeds = 80` run matrix.
+- Target-label boundary findings:
+  - T1_Nordic / Denmark has confirmed-illegal targets but no licensed baseline targets after the current label policy; ROC-AUC is undefined and illegal-consistency / balanced-accuracy style reporting is used.
+  - T2_ON / Ontario has licensed targets but no confirmed-illegal targets; ROC-AUC is undefined and licensed-consistency plus mean illegal probability are the meaningful diagnostics.
+- Method means from `output/week7/metrics/transfer_method_summary.csv`:
+  - T1_Nordic primary metric (illegal consistency fallback): source_only `0.2968`, DANN `0.2516`, StruRW `0.3097`, DANN+StruRW `0.3871`.
+  - T2_ON primary metric (licensed consistency / balanced accuracy): source_only `0.6167`, DANN `0.5583`, StruRW `0.9417`, DANN+StruRW `0.9583`; because the target is one-class, this should be interpreted as licensed-consistency/anomaly-score behavior, not transfer AUC.
+  - T2_PH ROC-AUC: source_only `0.6542`, DANN `0.5167`, StruRW `0.6292`, DANN+StruRW `0.5917`; this is a negative cross-continent transfer finding.
+  - T3_DiagnoseFrance ROC-AUC: source_only `0.8510`, DANN `0.8642`, StruRW `0.8702`, DANN+StruRW `0.7686`; the single methods improve slightly, but the deltas are borderline and DANN+StruRW degrades.
+- Pseudo-label quality audit:
+  - T1_Nordic StruRW pseudo quality is very poor at about `0.082`, making StruRW results high-risk there.
+  - T2_PH pseudo quality is about `0.626`, consistent with noisy cross-continent adaptation.
+  - T3 pseudo quality is about `0.544`, so StruRW's slight gain should be framed cautiously.
+  - T2_ON pseudo quality is high at about `0.892`, but that target is one-class licensed, so it mostly validates licensed-consistency rather than binary illegal detection.
+- StruRW audit:
+  - relation-level edge multipliers were clipped to `[0.1, 10.0]`.
+  - When no high-confidence target pseudo-label co-edge evidence exists for a relation, the implementation leaves that relation as a no-op rather than using a purely Laplace/uniform target estimate.
+- DANN diagnostics:
+  - T3 DANN mean ROC-AUC improves over source-only by about `+0.0132`, below the predeclared `+0.02` threshold.
+  - DANN hurts T2_PH and the one-class target consistency metrics, so Week 7 should be reported as context-dependent rather than generally beneficial.
+
+## 2026-04-28 Week 7 Remediation Findings
+- The early-stop remediation changed T3 materially:
+  - source_only ROC-AUC increased to `0.9861 ± 0.0186`
+  - DANN ROC-AUC increased to `0.9748 ± 0.0320`
+  - StruRW ROC-AUC is `0.9404 ± 0.0945`
+  - DANN+StruRW ROC-AUC is `0.8851 ± 0.1798`
+- Because remediated source_only is strongest on T3, Week 7 should not claim adaptation improves France diagnosis; instead, it should state that the previous low T3 numbers were partly an optimization/early-stop artifact.
+- T1_Nordic now uses `illegal_recall_at_youden` as the main one-class target metric:
+  - source_only `0.2065`
+  - DANN `0.2387`
+  - StruRW `0.1032`
+  - DANN+StruRW `0.3484`
+  - none reaches the `0.55` target, but values around `0.30` are still useful RQ2 evidence of differentiated illegal-family transfer difficulty.
+- T2_ON now uses lower-is-better `mean_pred_illegal`:
+  - source_only `0.3028`
+  - DANN `0.3596`
+  - StruRW `0.0004`
+  - DANN+StruRW `0.0258`
+  - this removes the misleading high balanced-accuracy framing and supports an anomaly-style "licensed target should stay low-illegal-probability" interpretation.
+- T2_PH after remediation is less negative for StruRW:
+  - source_only ROC-AUC `0.6417`
+  - DANN `0.5375`
+  - StruRW `0.6750`
+  - DANN+StruRW `0.7333`
+  - variance remains high, so this should be framed as exploratory improvement rather than a locked cross-continent solution.
+- StruRW entropy top-30% pseudo-label selection works as intended:
+  - T1 coverage `~0.304`
+  - T2_ON coverage `~0.324`
+  - T2_PH coverage `~0.316`
+  - T3 coverage `~0.308`
+- Pseudo-label quality after entropy selection:
+  - T1 remains weak at `~0.243`
+  - T2_ON and T3 are `1.0` under the available target labels
+  - T2_PH improves to `~0.783`
+
+## 2026-04-28 Week 7 StruRW/DANN Selection Fix Findings
+- The StruRW/DANN final-selection bug was confirmed and fixed:
+  - prefit stages now have `purpose = pseudo_labeler`
+  - final stages now have `purpose = final_classifier`
+  - StruRW final source-only classifier uses `selection_policy = last_epoch`
+  - DANN-family best-state selection ignores warmup epochs before epoch `20`
+- T3 seed42 targeted validation after the fix:
+  - DANN: target ROC-AUC `1.0000`, best epoch `200`, best-state min epoch `20`
+  - StruRW: target ROC-AUC `0.9947`, final classifier trained `200` epochs
+  - DANN+StruRW: target ROC-AUC `1.0000`, final classifier trained `200` epochs with DANN best-state min epoch `20`
+- Full affected-method rerun results:
+  - T1_Nordic `illegal_recall_at_youden`: source_only `0.2065`, DANN `0.2710`, StruRW `0.1419`, DANN+StruRW `0.2581`
+  - T2_ON lower-is-better `mean_pred_illegal`: source_only `0.3028`, DANN `0.3596`, StruRW `0.0003`, DANN+StruRW `0.0243`
+  - T2_PH ROC-AUC: source_only `0.6417`, DANN `0.5375`, StruRW `0.6458`, DANN+StruRW `0.7458`
+  - T3 ROC-AUC: source_only `0.9861`, DANN `0.9748`, StruRW `0.9905`, DANN+StruRW `0.9751`
+- Current acceptance status:
+  - T1_Nordic remains below `illegal_recall >= 0.55`, but has clear narrative value as differentiated illegal-family transfer evidence.
+  - T2_PH remains within the intended negative-finding band because all methods are below `0.80`.
+  - T2_ON passes the anomaly-style interpretation for StruRW and DANN+StruRW under `mean_pred_illegal < 0.30`; source-only is borderline above at `0.3028`.
+  - T3 does not satisfy `transfer >= source_only + 0.02`; StruRW is only about `+0.0044` over source-only.
+
+## 2026-04-28 Week 7 Acceptance Artifact Findings
+- Added `analysis/week7_transfer_acceptance.py` to freeze the final Week 7 interpretation into reproducible artifacts.
+- `week7_acceptance_audit.csv` records four final acceptance states:
+  - T1_Nordic: `fail_but_interpretable`
+  - T2_PH: `pass`
+  - T2_ON: `pass`
+  - T3_DiagnoseFrance: `fail`
+- `transfer_delta_vs_source_only.csv` uses direction-aware deltas:
+  - higher-is-better metrics use `method - source_only`
+  - T2_ON lower-is-better `mean_pred_illegal` uses `source_only - method`
+- `week7_delta_heatmap.png` visualizes those direction-aware deltas so positive values always mean improvement under the configured metric.
+- `paper/draft/sec4_3_week7_transfer.md` now contains a paper-ready Week 7 transfer result draft with metric-boundary language and the acceptance audit table.
+
+## 2026-04-28 Week 8 Preflight Findings
+- The current Week 8 source of truth is the Desktop trio:
+  - `<user_home>\Desktop\Week8_实验设计文档.md`
+  - `<user_home>\Desktop\Week8_验收标准简表.md`
+  - `<user_home>\Desktop\predeclared_hypotheses.md`
+- Week 8 is a mechanism-evidence layer for RQ2/RQ3, not the earlier few-shot/RQ4 placeholder path.
+- The prescribed Week 8 experiment set is:
+  - E1 edge-channel ablation
+  - E2 LogME transferability prescreen
+  - E3 Denmark family leave-one-family-out audit
+  - E4 control group C reintroduction
+  - E5 structure-vs-lexical slicing
+- The design document's risk order starts with E3 because a tsars LOFO failure would force a narrower wording of the Week 6 cross-verified result.
+- Existing Week 8 files are only zero-byte placeholders:
+  - `src/explain/feature_bucket_transfer.py`
+  - `src/transfer/logme_score.py`
+  - `analysis/rq3_logme_matrix.py`
+- No `output/week8` result tree exists yet.
+- Week 7 artifacts are complete and available as Week 8 inputs:
+  - `output/week7/metrics/transfer_summary.csv`
+  - `output/week7/splits/*.csv`
+  - `output/week7/runs/*.json`
+- HeCo tau0.7 encoder checkpoints are available for all five seeds via Week 6 seeds 43-46 and Week 5 seed 42.
+- The local conda environment `hetero-transfer-v2` successfully imports torch `2.5.1+cpu`, PyG `2.6.1`, sklearn, pandas, and numpy.
+
+## 2026-04-28 Week 8 E3 Core Findings
+- Added Week 8 infrastructure:
+  - `configs/week8.yaml`
+  - `src/utils/paired_bootstrap.py`
+  - `src/data/family_extractor.py`
+  - `src/train/multi_scenario_eval.py`
+  - `src/explain/feature_bucket_transfer.py`
+  - `src/explain/structure_vs_lexical.py`
+  - `src/transfer/logme_score.py`
+  - `src/transfer/transferability_analysis.py`
+  - `analysis/rq3_logme_matrix.py`
+- Copied the Desktop predeclared hypothesis file to `output/week8/audits/predeclared_hypotheses.md` and recorded its SHA-256 in `output/week8/audits/predeclared_freeze_manifest.json`.
+- Smoke tests passed for all five Week 8 entrypoints:
+  - E3 tsars LOFO
+  - E1 T3 `-hosted_on`
+  - E5 T3 `C2_no_cctld`
+  - E4 control-group scenario smoke
+  - E2 LogME pair-score smoke
+- Denmark family extraction over the current Graph v2 primary frame produced 7 LOFO-eligible families:
+  - `ggbet = 10`
+  - `tsars = 9`
+  - `icecasino = 6`
+  - `verdecasino = 4`
+  - `bcdot = 4`
+  - `bcgame = 2`
+  - `freshbet = 2`
+- E3 formal core completed `35` runs, with `35` logs, `35` splits, and `35` run manifests under `output/week8/`.
+- E3 five-seed LOFO AUC means:
+  - `bcdot = 0.9928`
+  - `freshbet = 0.9929`
+  - `bcgame = 0.9976`
+  - `tsars = 0.9989`
+  - `icecasino = 0.9992`
+  - `verdecasino = 1.0000`
+  - `ggbet = 1.0000`
+- Under the core LOFO runs, H_E3a is provisionally supported because all-family LOFO performance is well above `0.85`.
+- H_E3b is provisionally supported because tsars LOFO mean AUC is `0.9989`, above the `0.85` threshold.
+- H_E3c is provisionally supported because all eligible family five-seed AUC std values are below `0.10`.
+- E3 permutation testing is still pending, so the final E3 conclusion should remain "core LOFO passed; permutation audit pending."
+- `output/week8/metrics/E3_acceptance_audit.csv` records the three E3 hypotheses as `provisional_pass` pending the permutation audit.
+
+## 2026-04-28 Week 8 Final Findings
+- E3 permutation testing completed with `500` random held-out control runs.
+- E3 core hypotheses pass:
+  - H_E3a: minimum family LOFO mean AUC `0.9928` >= `0.85`
+  - H_E3b: tsars LOFO mean AUC `0.9989` >= `0.85`
+  - H_E3c: maximum family AUC std `0.0143` < `0.10`
+- The E3 supplemental permutation audit is negative:
+  - real family LOFO mean AUC `0.9973`
+  - random held-out LOFO mean AUC `0.9979`
+  - real minus random `-0.0005`
+  - one-sided `p_real_lower = 0.160`
+  - Interpretation: real reconstructed family labels are useful as a robustness partition, but this permutation audit does not prove they are harder than random held-out positives.
+- E1 edge-channel ablation:
+  - H_E1a passes because T3 `-uses_cert` produces a drop/effect of `0.0707` with CI above zero.
+  - H_E1b fails because T2_PH has channel effects larger than the predeclared `0.03` bound; the largest absolute delta is `0.0833`.
+  - H_E1c fails because T2_ON `mean_pred_illegal` increases by only `0.0322` under the tested `uses_ns`/`registered_via` removals, below `0.10`.
+- E5 structure-vs-lexical is the major counterexample:
+  - H_E5a fails: T3 full minus no-ccTLD drop is `0.0815`, above the allowed `<0.05`.
+  - H_E5b fails: T3 graph-only AUC is `0.7134`, below `0.85`.
+  - H_E5c fails: T3 graph-only minus lex-only is `-0.2396`, opposite the expected direction.
+  - This means the France T3 result should be written as strongly lexical/ccTLD-mediated rather than graph-structure independent.
+- E4 control-group findings:
+  - H_E4a passes: illegal vs `control_legal_commercial` AUC is `0.9704`.
+  - H_E4b and H_E4c fail: `0/5` encoders satisfy the predeclared embedding-distance ordering for either geometry hypothesis.
+  - Interpretation: the classifier can separate illegal from ordinary commercial controls, but the HeCo embedding geometry does not support the proposed strict distance-order mechanism.
+- E2 transferability findings:
+  - Only `6` ordered single-source region pairs have complete binary labels in the current primary label space, giving `30` realized alignment rows rather than the design estimate of `105`.
+  - H_E2a fails: LogME-AUC Spearman rho is `0.2754`, below `0.60`.
+  - H_E2b fails: absolute LogME rho `0.2754` is lower than H-divergence rho `0.3925`.
+  - H_E2c fails: LogME Kendall tau is `0.1824`, below `0.50`.
+  - Interpretation: LogME is not a reliable transferability prescreen in the current small complete-label hetero-graph subset.
+- Final Week 8 hypothesis count:
+  - pass: `5`
+  - fail: `10`
+  - partial: `0`
+- Final Week 8 output package includes:
+  - `output/week8/metrics/week8_acceptance_audit.csv`
+  - `output/week8/metrics/week8_completion_audit.csv`
+  - `paper/draft/sec4_4_week8_mechanism.md`
+
+## 2026-04-30 Phase 23 Security and Patch Findings
+- The current workspace contains a Week 8.5 correction layer under `output/week85/`; original Week 8 artifacts must remain unchanged for auditability.
+- A real `X_BEARER_TOKEN` value was present in `.claude/settings.local.json`. It has been replaced with `<REDACTED_X_BEARER_TOKEN>`.
+- `.env.example` now records placeholder environment variables only.
+- `.gitignore` now excludes local environment files, `.claude/settings.local.json`, common key/credential files, caches, and large checkpoint formats.
+- Before the corrected E5 patch, `configs/week8.yaml` contained the old E5 naming bug:
+  - `C3_no_lex` incorrectly maps to `feature_mode: lexical_only`.
+  - `C5_lex_only` currently leaves Website features full and only empties edges.
+
+## 2026-04-30 Phase 23 Completion Findings
+- Corrected E5 is implemented in `configs/week8.yaml`, `src/explain/structure_vs_lexical.py`, and `analysis/week8_patch_corrected_e5.py`, with outputs isolated under `output/week8_patch/`.
+- Corrected E5 generated `180` run manifests/logs/predictions and the audit package:
+  - `output/week8_patch/metrics/E5_structure_vs_lexical.csv`
+  - `output/week8_patch/metrics/E5_structure_vs_lexical_summary.csv`
+  - `output/week8_patch/metrics/E5_corrected_delta_vs_full.csv`
+  - `output/week8_patch/metrics/E5_corrected_acceptance_audit.csv`
+- Corrected E5 supports the Week 8.5 lexical-boundary interpretation for T3:
+  - C1 full AUC `0.9861`
+  - C2 no-ccTLD AUC `0.9046`
+  - C3 no-Website-lexical AUC `0.7134`
+  - C4 graph-only AUC `0.7134`
+  - C5 lex-only AUC `0.9530`
+  - lex-only minus graph-only `0.2396`
+- Week 6 head ablation is complete under `output/week6_head_ablation/`:
+  - attention mean ROC-AUC `0.9322`, std `0.0716`
+  - fixed_mean mean ROC-AUC `0.9735`, std `0.0163`
+  - mlp_64 mean ROC-AUC `0.9705`, std `0.0155`
+  - metapath_only is much weaker at `0.8294`
+  - interpretation: part of the Week 6 variance issue is head-related, not only encoder-related.
+- Week 9 few-shot RQ4 is complete under `output/week9/`:
+  - T2_PH best k=5 AUC `0.9250`, delta vs Week7 source-only `+0.2833`
+  - T3 best k=5 AUC `0.9847`, delta vs Week7 source-only `-0.0014`
+  - interpretation: small target supervision helps the hard Philippines transfer but not the already saturated France transfer.
+- Week 9 formal hard-negative family audit is complete:
+  - mean hard-negative family AUC `0.6218`
+  - tsars hard-negative AUC `0.3864`
+  - both fail the `>=0.80` family-recognition threshold.
+- Week 10 final RQ tables are complete:
+  - RQ1 is `mixed_support` because illegal-vs-licensed separability is strong but illegal-family discrimination is weak.
+  - RQ2 is `support_lexical_boundary`.
+  - RQ3 is `mixed_negative_transfer`.
+  - RQ4 is `target_dependent_support`.
+  - model integration is `head_ablation_support`.
+- Final rollup now explicitly infers `is_posthoc=True` for Week8.5 P3/P4, corrected E5, Week9 few-shot, and Week9 hard-negative audit rows.
+
+## 2026-05-02 Final Cleanup and Reproducibility Findings
+- Zero-byte Python scan found `25` empty Python files. All were converted into explicit docstring-only package markers or placeholders.
+- The following method placeholders are explicitly not implemented and must not be cited as current paper evidence:
+  - `src/models/sehgnn.py`
+  - `src/models/hinormer.py`
+  - `src/transfer/irm_penalty.py`
+  - `src/transfer/eerm_virtual_env.py`
+  - `src/train/train_transfer_strurw.py`
+  - `src/transfer/csbm_estimator.py`
+  - `src/transfer/hetero_transfer_full.py`
+- Current README/paper/task-plan references to SeHGNN/HINormer/standalone StruRW are negative or clarifying references, not implementation claims.
+- `README.md` now contains relative-path rerun commands and keeps Windows local conda commands only as local examples.
+- `docs/reproducibility_checklist.md` now records:
+  - saved result packages
+  - rerunnable scripts
+  - post-hoc outputs
+  - outputs that are not preregistered evidence
+  - files that should not be committed to GitHub
+- `analysis/final_artifact_audit.py` checks key CSV existence, expected row counts, output directory counts, post-hoc marking, and key metrics.
+- `output/final_artifact_audit.csv` has `46` checks and all pass.
+- The final RQ wording is deliberately lowered:
+  - RQ1 is mixed support.
+  - RQ2 is lexical/ccTLD boundary evidence.
+  - RQ3 says transferability is unreliable.
+  - RQ4 is target-dependent few-shot support.
+  - No final table claims broad cross-region generalization has been proven.
+
+## 2026-05-04 Week 7 / Week 8 Interpretation Boundary Findings
+- Added `analysis/week7_week8_interpretation_revision.py` to generate interpretation-boundary tables from existing saved results only.
+- New Week 7 tables:
+  - `output/week7/metrics/week7_transfer_summary.csv`
+  - `output/week7/metrics/week7_transfer_taxonomy.csv`
+  - `output/week7/metrics/week7_to_week8_bridge.csv`
+- Week 7 is now framed as transfer performance analysis:
+  - T1_Nordic is hard transfer with one-class target labels and low illegal recall.
+  - T2_PH is few-shot recoverable hard transfer; Week9 k=5 few-shot AUC is `0.9250`.
+  - T2_ON is an unreliable/one-class transfer boundary, not a standard ROC-AUC task.
+  - T3_DiagnoseFrance is shortcut-sensitive easy transfer; Week8 corrected E5 shows lexical/ccTLD assistance.
+- New Week 8 diagnostic tables:
+  - `output/week8/metrics/E3_lofo_setting_comparison.csv`
+  - `output/week8/metrics/E3_hard_negative_family_summary.csv`
+  - `output/week8/metrics/E5_structure_vs_lexical_corrected_summary.csv`
+  - `output/week8/metrics/week8_diagnostic_rollup.csv`
+- Week 8 is now framed as diagnostic analysis of transfer boundaries:
+  - E1: mixed edge-channel diagnostic evidence.
+  - E2: failed LogME/transferability proxy.
+  - E3: limited family-level generalization; licensed-negative LOFO tests illegal-vs-licensed separability, while hard illegal-negative LOFO is the relevant family-level diagnostic.
+  - E4: limited; embedding distance is an insufficient mechanism explanation.
+  - E5: failed as pure structural-transfer evidence; T3 is substantially lexical/ccTLD-assisted.
+- Added paper draft sections:
+  - `paper/draft/sec_week7_transfer_results.md`
+  - `paper/draft/sec_week8_diagnostic_analysis.md`
+- Added evidence boundary table:
+  - `docs/evidence_boundary_table.md`
+- All new interpretation-boundary tables are marked `is_posthoc_diagnostic=True`.
+- `analysis/final_artifact_audit.py` now includes the new interpretation-boundary outputs; `output/final_artifact_audit.csv` has `60` passing checks.
+
+## 2026-05-04 Superseded Draft Marker Findings
+- `paper/draft/sec4_3_week7_transfer.md` and `paper/draft/sec4_4_week8_mechanism.md` were checked against the newer paper-safe drafts.
+- The old Week 8 mechanism draft still contains historical wording that can conflict with the hard-negative E3 correction if read as final interpretation.
+- Both old draft files now begin with a superseded note pointing to the new paper-safe interpretation files:
+  - `paper/draft/sec_week7_transfer_results.md`
+  - `paper/draft/sec_week8_diagnostic_analysis.md`
+- `README.md` and `MANIFEST.md` now state that final paper-safe Week 7/8 interpretation should follow `docs/evidence_boundary_table.md` and the new `sec_week7/8` draft files.
+- Final checks:
+  - `analysis/final_artifact_audit.py`: `60/60` pass.
+  - `python -m py_compile` over `analysis/` and `src/`: pass.
+
+## 2026-05-04 Week 9 P0 Preflight Findings
+- `output/week7/metrics/week7_transfer_taxonomy.csv` confirms the paper-safe source-only baselines: T2_PH ROC-AUC `0.6417` and T3_DiagnoseFrance ROC-AUC `0.9861`.
+- `output/week8/metrics/E5_structure_vs_lexical_corrected_summary.csv` confirms the T3 shortcut boundary: no-ccTLD drops T3 AUC by about `0.0815`, graph-only is about `0.7134`, and lex-only is about `0.9530`.
+- Existing `output/week9/metrics/fewshot_raw_runs.csv` and `fewshot_summary.csv` are preliminary/historical Week 9 RQ4 artifacts with shots `1/3/5`, checkpoint seeds `42-46`, and no formal W9_E1/W9_E2/W9_E3 schema.
+- T2_PH and T3_DiagnoseFrance are binary target-test settings in the Week 7 split files and can be evaluated with ROC-AUC.
+- T2_PH target adaptation pools are small; for seed42 the pool has `11` licensed and `8` illegal target samples, so requested 10-shot per class must be capped to `8` per class and recorded.
+- T3_DiagnoseFrance has a larger binary target adaptation pool; for seed42 it has `14` licensed and `29` illegal target samples.
+- No Week 7 source-only classifier checkpoint files were found under `output/week7/`, so strict source-only-checkpoint head tuning is not currently available without rerunning/saving a new checkpoint family.
+- The practical Week 9 P0 training fallback is saved HeCo encoder checkpoint plus source_train and balanced target support joint fine-tuning. This must be stated in protocol and paper text rather than described as strict classifier-head-only tuning.
+- Running `python analysis/final_artifact_audit.py` with the default base interpreter failed because pandas is not installed there; verification should use the `hetero-transfer-v2` conda environment.
+
+## 2026-05-04 Week 9 P0/P1 Formal Findings
+- `analysis/week9_fewshot_calibration.py` now emits the formal Week 9 output schema:
+  - `W9_E1_fewshot_curve.csv`
+  - `W9_E2_fewshot_seed_stability.csv`
+  - `W9_E3_shortcut_aware_fewshot.csv`
+  - `W9_E3_shortcut_aware_summary.csv`
+  - `week9_fewshot_rollup.csv`
+- The formal matrix has `100` W9_E1 rows: 2 targets x 2 feature conditions x 5 shots x 5 experiment seeds.
+- Every formal row has a `split_file`, and all `100` split files exist under `output/week9/splits/`.
+- A split-leakage assertion over all formal split files found zero overlap between `target_fewshot_train` support nodes and `target_test`.
+- T2_PH is a stable hard-but-recoverable target under full features:
+  - source-only mean AUC `0.6417`
+  - 5-shot mean AUC `0.9375`, mean delta `+0.2958`
+  - requested 10-shot is capped to actual 8-shot per class and gives mean AUC `0.9542`, mean delta `+0.3125`
+  - success rate for delta >= 0.05 is `1.0`
+- T3_DiagnoseFrance remains saturated under full features:
+  - source-only mean AUC `0.9861`
+  - requested 10-shot mean AUC `0.9958`, mean delta `+0.0096`
+  - success rate for delta >= 0.05 is `0.0`
+  - 5-shot is unstable/sample-sensitive, so it should not be used as a positive few-shot claim.
+- The no-ccTLD condition was run as P1. T2_PH still improves, while T3 no-ccTLD has mixed gains relative to its weaker no-ccTLD source baseline. The safe interpretation is mixed shortcut sensitivity, not proof of structural calibration.
+- `analysis/final_artifact_audit.py` was updated to preserve historical Week 9 preliminary expectations while adding formal W9_* checks; latest audit is `75` pass and `0` fail.
+
+## 2026-05-08 Week 9 Result-Unification Findings
+- `configs/week9_fewshot.yaml` now exists and records the base Week 9 matrix:
+  - targets: T2_PH and T3_DiagnoseFrance
+  - shots: 0, 1, 3, 5, 10
+  - seeds: 0, 1, 2, 3, 4
+  - feature conditions: full and no-ccTLD
+  - `is_posthoc: true`
+  - future feature conditions: full, no-ccTLD, no-website-lexical, graph-only
+- The authoritative Week 9 result口径 is now the formal W9 package:
+  - `W9_E1_fewshot_curve.csv`
+  - `W9_E2_fewshot_seed_stability.csv`
+  - `W9_E3_shortcut_aware_summary.csv`
+  - `week9_fewshot_rollup.csv`
+- The older preliminary files are preserved but marked legacy:
+  - `fewshot_raw_runs.csv`
+  - `fewshot_summary.csv`
+  - `fewshot_acceptance_audit.csv`
+  - each carries `week9_result_status=legacy_preformal`, `superseded_by`, and `paper_use=legacy_only_do_not_use_as_authoritative`
+- T2_PH was expanded to four feature conditions across 5 shots and 5 seeds. The formal result table now has `150` rows:
+  - T2_PH: 4 feature conditions x 5 shots x 5 seeds = 100 rows
+  - T3_DiagnoseFrance: 2 feature conditions x 5 shots x 5 seeds = 50 rows
+- T2_PH requested 10-shot results are stable across feature conditions:
+  - full: mean AUC `0.9542`, mean delta `+0.3125`, success(delta >= 0.05) `1.0`
+  - no-ccTLD: mean AUC `0.9417`, mean delta `+0.3375`, success `1.0`
+  - no-website-lexical: mean AUC `0.9354`, mean delta `+0.3375`, success `1.0`
+  - graph-only: mean AUC `0.9354`, mean delta `+0.3375`, success `1.0`
+- Interpretation: graph-only/no-website-lexical few-shot also improves T2_PH, strengthening the recoverable-target calibration claim. It still should be written as target calibration evidence, not proof of broad pure structural generalization.
+- `fewshot_acceptance_audit_v2.csv` is generated from `week9_fewshot_rollup.csv`:
+  - T2_PH, best_shot `10`, best_auc `0.9542`, delta `+0.3125`, status `posthoc_support`
+  - T3, best_shot `10`, best_auc `0.9958`, delta `+0.0096`, status `no_clear_gain`
+- Final checks passed:
+  - `analysis/final_artifact_audit.py`: `80/80` pass
+  - `python -m compileall -q analysis src`: pass
+  - split leakage check: `150` W9 rows, `150` split files, `0` support/test overlap
+
+## 2026-05-08 Week 10 Final Freeze Findings
+- Week10 is implemented as a reporting/audit/freeze layer only. It does not rerun or rewrite old experiments.
+- `configs/week10_final.yaml` defines input paths for Week4, Week5, Week6, Week7, Week8, Week8_patch, Week85, and Week9, with outputs under `output/week10/`.
+- `analysis/week10_final_rq_tables.py` generated:
+  - `output/week10/metrics/final_rq_evidence_table.csv`
+  - `output/week10/metrics/final_hypothesis_rollup.csv`
+  - `output/week10/tables/table_rq1_main_results.csv`
+  - `output/week10/tables/table_rq2_regional_heterogeneity.csv`
+  - `output/week10/tables/table_rq3_transfer_boundary.csv`
+  - `output/week10/tables/table_rq4_fewshot.csv`
+- All final RQ evidence and hypothesis rows have `status`, `is_posthoc`, `paper_safe_claim`, and `paper_forbidden_claim`.
+- `analysis/feature_bucket_transfer.py` generated `feature_bucket_transfer_summary.csv` and `fig7_feature_bucket_transfer.pdf`; T3 France is explicitly diagnosed as lexical/ccTLD shortcut-sensitive.
+- `analysis/week10_ablation_all.py` generated the complete ablation table with `101` rows across representation learning, transfer method, feature bucket, few-shot, and family hard-negative groups.
+- `analysis/week10_fewshot_final.py` generated final RQ4 few-shot summaries from the formal W9_* tables. T2_PH remains post-hoc support, while T3 remains saturated/no-clear-gain.
+- `analysis/week10_hard_negative_final.py` generated the hard-negative family final table and figure. Overall family-boundary status remains failed despite one family exceeding the 0.80 threshold.
+- `analysis/week10_deviation_case.py` and `src/explain/deviation_case_viz.py` generated three deviation cases:
+  - France ccTLD shortcut
+  - Philippines few-shot recovery
+  - family hard-negative failure
+- `analysis/week10_acceptance_audit.py` generated:
+  - `week10_acceptance_audit.csv`
+  - `posthoc_flag_audit.csv`
+  - `metric_consistency_audit.csv`
+  - `table_figure_crosswalk.csv`
+- Week10 paper draft sections exist for RQ2, RQ3, RQ4, and failure discussion, and keep the required claim boundaries.
+- Final verification:
+  - Week10 acceptance audit: `31/31` pass
+  - final artifact audit: `104/104` pass
+  - recursive `compileall`: pass
+
+## 2026-04-28 Week 8.5 Defect Findings
+- The original Week 8 E3 LOFO design is methodologically invalid for family-level generalization:
+  - Its test set used held-out Denmark family illegal sites as positives and licensed sites as negatives.
+  - This mostly repeats the W6 illegal-vs-licensed discrimination task.
+  - The very high E3 LOFO AUC and the random permutation baseline are therefore not sufficient evidence of family-level generalization.
+- Week 8 E3 H_E3a/H_E3b/H_E3c should be downgraded from "pass" to "invalid_original_design" until a balanced/hard-negative W8.5 audit is run.
+- The W8.5 E3 replacement should report two test forms:
+  - balanced licensed-negative LOFO: held-out family illegal vs equal-count held-out non-Denmark licensed controls.
+  - hard-negative LOFO: held-out family illegal vs other Denmark illegal-family sites.
+- The W8.5 E2 replacement should avoid invalid AUC expansion by using target-boundary pseudo metrics for one-class targets, not by forcing binary AUC.
+- P3/P4 are post-hoc design-direction revisions and must be labeled as such, not silently merged into the prerun Week 8 acceptance table.
+
+## 2026-04-29 Week 8.5 Patch Findings
+- Implemented W8.5 in:
+  - `src/train/multi_scenario_eval.py`
+  - `analysis/week85_patch.py`
+- W8.5 uses a separate output tree, `output/week85/`, so original Week 8 artifacts remain auditable.
+- P1 revised E3 outputs:
+  - `output/week85/metrics/E3_w85_lofo_raw.csv`
+  - `output/week85/metrics/E3_w85_lofo_summary.csv`
+  - `output/week85/audits/E3_w85_dk_family_assignments.csv`
+- P1 revised E3 completed `70` evaluation rows:
+  - `35` balanced licensed-negative rows
+  - `35` hard illegal-negative rows
+  - `70` run manifests
+  - `35` training-history logs
+  - `70` prediction files
+- Balanced licensed-negative LOFO result:
+  - every eligible family has mean AUC `1.0000`
+  - this supports held-out-family illegal-vs-licensed recognition under a balanced test set
+- Hard illegal-negative LOFO result:
+  - mean hard-negative family AUC is `0.6219`, below the proposed `0.80` family-recognition threshold
+  - tsars hard-negative AUC is `0.3864`
+  - freshbet hard-negative AUC is `0.4250`
+  - interpretation: the model does not reliably identify family-level membership among illegal sites; original E3 family-level pass should not be claimed
+- P2 expanded E2 outputs:
+  - `output/week85/metrics/E2_w85_expanded_pair_scores.csv`
+  - `output/week85/metrics/E2_w85_transferability_metrics.csv`
+  - `output/week85/plots/E2_w85_logme_vs_quasi_metric.png`
+- P2 expanded E2 has `150` rows:
+  - source regions with complete binary labels: Belgium, France, Philippines
+  - target metrics: `30` binary AUC rows, `45` illegal-recall one-class rows, and `75` one-minus-mean-illegal-probability rows
+- P2 result is still negative:
+  - LogME Spearman rho = `0.0733`
+  - LogME Kendall tau = `0.0470`
+  - H-divergence has larger absolute Spearman rho (`0.1742`) than LogME
+  - interpretation: expanded one-class-aware pairing does not rescue LogME as a prescreen
+- P3 post-hoc E4:
+  - H_E4b' direction-only passes at `4/5` seeds
+  - H_E4c' still fails at `0/5` seeds
+- P4 post-hoc E1/E5:
+  - H_E5a' passes: T3 ccTLD/local-TLD removal drop `0.0815`
+  - H_E5b' passes: T3 lex-only AUC `0.9530`
+  - H_E5c' passes for transfer-specific dominance
+  - H_E1b' passes: T2_PH `registered_via` has a significant negative-transfer effect of `-0.0833`
+  - H_E1c' passes: T2_ON has `2` significant edge effects
+- `output/week85/metrics/week85_acceptance_audit.csv` is the authoritative W8.5 patch table.
+- `paper/draft/sec4_4_week85_patch.md` records the post-hoc interpretation and should be paired with, not substituted for, the original Week 8 prerun audit.
+
+## 2026-05-09 Week 11 Aggressive Improvement Findings
+- The `files.zip` package contains the Week11 aggressive route B design, predeclared hypotheses, and acceptance roadmap. The phase adds P1 family metric learning, P2 IRM/EERM, P3 full transfer few-shot, P4 significance testing, and P5 writing expansion.
+- `configs/week11.yaml` records the prerun-frozen Week11 inputs, thresholds, seeds, and output namespace under `output/week11/`.
+- P1 family metric learning was implemented on frozen HeCo embeddings with a dual binary/family head and SupCon loss. It failed all preregistered P1 hypotheses:
+  - mean hard-negative AUC `0.1259` vs threshold `0.75`
+  - tsars hard-negative AUC `0.0741` vs threshold `0.70`
+  - mean delta vs W9 baseline `-0.4960` vs threshold `+0.10`
+  - A2-main minus shuffled-family gap `-0.2286` vs threshold `+0.05`
+- P1 should be written as a negative result: this frozen-embedding family metric design does not rescue the illegal-vs-illegal-family boundary, and it must not be framed as successful family attribution.
+- P2 IRM/EERM was implemented and run:
+  - `P2_method_comparison.csv` has `125` rows including Week7 baselines plus `45` new Week11 IRM/EERM rows.
+  - max improvement vs source-only is `+0.2708`, so H_P2a passes.
+  - EERM K sensitivity max range is `0.0395`, so H_P2c passes.
+  - Safe interpretation: IRM/EERM are now citable as implemented comparisons, but not as universal transfer solutions.
+- P3 full few-shot matrix was implemented and run:
+  - `P3_full_fewshot_matrix.csv` has `100` rows: Week9 full-feature T2_PH/T3 plus new one-class T1_Nordic/T2_ON runs.
+  - T1_Nordic 5-shot illegal recall is `0.4581`, below the `0.50` threshold, so H_P3a fails.
+  - T2_ON 5-shot mean predicted illegal probability is `0.2145`, below the `<0.30` threshold, so H_P3b passes.
+  - recoverable transfer count is `2/4`, so H_P3c fails and RQ4 remains target-dependent.
+- P4 significance testing passes:
+  - W7 method pairwise Holm-significant bootstrap count is `9/24`.
+  - W9 few-shot Holm-significant bootstrap count is `5/8`.
+- P5 writing expansion passes after extending the honest evidence boundary framework:
+  - section 5 character count exceeds `3500`.
+  - RQ plus section 5 count exceeds `8000`.
+  - `docs/evidence_boundary_table.md` is explicitly cited.
+- Week11 acceptance audit reports `9/15` pass and `6/15` fail. The improvement layer strengthens auditability and method coverage, but the final story remains bounded rather than model-wide success.
+- Validation passed:
+  - final artifact audit: `128/128` pass
+  - recursive `compileall -q src analysis`: pass
+  - P3 one-class split leakage check: `40` split files, `0` support-test overlaps

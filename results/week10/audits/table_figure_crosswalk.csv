@@ -1,0 +1,10 @@
+artifact,source_table,paper_role,artifact_exists,source_exists,status
+output\week10\figures\fig7_feature_bucket_transfer.pdf,output\week10\metrics\feature_bucket_transfer_summary.csv,RQ2 regional heterogeneity,True,True,pass
+output\week10\figures\fig8_fewshot_curves.pdf,output\week10\metrics\fewshot_final_summary.csv,RQ4 few-shot calibration,True,True,pass
+output\week10\figures\fig9_deviation_case.pdf,output\week10\metrics\deviation_case_index.csv,case-level failure/recovery explanation,True,True,pass
+output\week10\figures\fig10_hard_negative_family.pdf,output\week10\metrics\hard_negative_family_final_summary.csv,family hard-negative boundary,True,True,pass
+output\week10\metrics\table6_ablation_all.csv,output\week10\metrics\table6_ablation_all.csv,ablation summary,True,True,pass
+output\week10\tables\table_rq1_main_results.csv,output\week10\metrics\final_rq_evidence_table.csv,RQ1 main results,True,True,pass
+output\week10\tables\table_rq2_regional_heterogeneity.csv,output\week10\metrics\feature_bucket_transfer_summary.csv,RQ2 regional heterogeneity,True,True,pass
+output\week10\tables\table_rq3_transfer_boundary.csv,output\week10\metrics\final_rq_evidence_table.csv,RQ3 transfer boundary,True,True,pass
+output\week10\tables\table_rq4_fewshot.csv,output\week10\metrics\fewshot_final_summary.csv,RQ4 few-shot,True,True,pass

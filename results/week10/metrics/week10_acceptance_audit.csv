@@ -1,0 +1,32 @@
+check,status,observed,expected,detail,source_table,paper_role,artifact_exists,source_exists
+output/week10/metrics/final_rq_evidence_table.csv:exists,pass,present,present,,,,,
+output/week10/metrics/final_hypothesis_rollup.csv:exists,pass,present,present,,,,,
+output/week10/metrics/feature_bucket_transfer_summary.csv:exists,pass,present,present,,,,,
+output/week10/metrics/table6_ablation_all.csv:exists,pass,present,present,,,,,
+output/week10/metrics/fewshot_final_summary.csv:exists,pass,present,present,,,,,
+output/week10/metrics/hard_negative_family_final_summary.csv:exists,pass,present,present,,,,,
+output/week10/metrics/deviation_case_index.csv:exists,pass,present,present,,,,,
+output/week10/figures/fig7_feature_bucket_transfer.pdf:exists,pass,present,present,,,,,
+output/week10/figures/fig8_fewshot_curves.pdf:exists,pass,present,present,,,,,
+output/week10/figures/fig9_deviation_case.pdf:exists,pass,present,present,,,,,
+output/week10/figures/fig10_hard_negative_family.pdf:exists,pass,present,present,,,,,
+final_rq_required_claim_columns,pass,"rq,evidence_item,metric,value,supporting_file,interpretation,status,is_posthoc,paper_safe_claim,paper_forbidden_claim,best_shot,best_mean_auc","is_posthoc,paper_forbidden_claim,paper_safe_claim,status",,,,,
+forbidden_claims_nonempty,pass,True,true,,,,,
+week9_rollup_authoritative_available,pass,rollup_rows=2; acc_v2_rows=2,non-empty,,,,,
+output/week10/metrics/final_rq_evidence_table.csv,pass,posthoc_true=20; rows=21,posthoc column present,,,,,
+output/week10/metrics/final_hypothesis_rollup.csv,pass,posthoc_true=31; rows=31,posthoc column present,,,,,
+output/week10/metrics/fewshot_final_summary.csv,pass,posthoc_true=30; rows=30,posthoc column present,,,,,
+output/week10/metrics/hard_negative_family_final_summary.csv,pass,posthoc_true=7; rows=7,posthoc column present,,,,,
+output/week10/metrics/deviation_case_index.csv,pass,posthoc_true=3; rows=3,posthoc column present,,,,,
+week9_rollup_vs_acceptance_v2_t2_delta,pass,0.3125,0.3125,,,,,
+week9_rollup_vs_acceptance_v2_t3_delta,pass,0.0096419753086419,0.0096419753086419,,,,,
+week10_fewshot_uses_w9_stability,pass,output\week9\metrics\W9_E2_fewshot_seed_stability.csv,W9_E2_fewshot_seed_stability.csv,,,,,
+output\week10\figures\fig7_feature_bucket_transfer.pdf,pass,pass,pass,,output\week10\metrics\feature_bucket_transfer_summary.csv,RQ2 regional heterogeneity,True,True
+output\week10\figures\fig8_fewshot_curves.pdf,pass,pass,pass,,output\week10\metrics\fewshot_final_summary.csv,RQ4 few-shot calibration,True,True
+output\week10\figures\fig9_deviation_case.pdf,pass,pass,pass,,output\week10\metrics\deviation_case_index.csv,case-level failure/recovery explanation,True,True
+output\week10\figures\fig10_hard_negative_family.pdf,pass,pass,pass,,output\week10\metrics\hard_negative_family_final_summary.csv,family hard-negative boundary,True,True
+output\week10\metrics\table6_ablation_all.csv,pass,pass,pass,,output\week10\metrics\table6_ablation_all.csv,ablation summary,True,True
+output\week10\tables\table_rq1_main_results.csv,pass,pass,pass,,output\week10\metrics\final_rq_evidence_table.csv,RQ1 main results,True,True
+output\week10\tables\table_rq2_regional_heterogeneity.csv,pass,pass,pass,,output\week10\metrics\feature_bucket_transfer_summary.csv,RQ2 regional heterogeneity,True,True
+output\week10\tables\table_rq3_transfer_boundary.csv,pass,pass,pass,,output\week10\metrics\final_rq_evidence_table.csv,RQ3 transfer boundary,True,True
+output\week10\tables\table_rq4_fewshot.csv,pass,pass,pass,,output\week10\metrics\fewshot_final_summary.csv,RQ4 few-shot,True,True

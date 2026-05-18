@@ -1,0 +1,213 @@
+workspace_root: <workspace_root>
+
+data:
+  graph_pt: data/graphs/hetero_graph_v2.pt
+  graph_metadata: data/graphs/hetero_graph_v2_metadata.json
+  master_site_registry: data/master_site_registry.csv
+  node_feature_schema: data/node_feature_schema.json
+
+output:
+  root: output/week8
+  splits: output/week8/splits
+  runs: output/week8/runs
+  metrics: output/week8/metrics
+  logs: output/week8/logs
+  audits: output/week8/audits
+  plots: output/week8/plots
+  predictions: output/week8/predictions
+  embeddings: output/week8/embeddings
+  checkpoints: output/week8/checkpoints
+
+tasks:
+  primary_label_space:
+    - licensed_baseline
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  positive_label_tiers:
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  excluded_tiers:
+    - gray_candidate_minimum
+    - gray_candidate_strong
+    - control_legal_commercial
+
+seeds: [42, 43, 44, 45, 46]
+
+transfer_pairs:
+  T1_Nordic:
+    source_regions: [Sweden, Spain, Italy]
+    target_regions: [Denmark]
+    primary_metric: illegal_recall_at_youden
+    primary_metric_direction: higher_is_better
+    incomplete_target_policy: illegal_recall_at_youden_boundary
+  T2_PH:
+    source_regions: [Spain, Sweden, Italy, Belgium, France, Germany, United Kingdom, Netherlands]
+    target_regions: [Philippines]
+    primary_metric: roc_auc
+    primary_metric_direction: higher_is_better
+    incomplete_target_policy: standard_binary_eval
+  T2_ON:
+    source_regions: [Spain, Sweden, Italy, Belgium, France, Germany, United Kingdom, Netherlands]
+    target_regions: [Ontario]
+    primary_metric: mean_pred_illegal
+    primary_metric_direction: lower_is_better
+    incomplete_target_policy: licensed_consistency_and_anomaly_score
+  T3_DiagnoseFrance:
+    source_regions: [Spain, Italy]
+    target_regions: [France]
+    primary_metric: roc_auc
+    primary_metric_direction: higher_is_better
+    incomplete_target_policy: standard_binary_eval
+
+splits:
+  transfer:
+    source_val_fraction: 0.20
+    target_test_fraction: 0.40
+    group_columns: [operator_or_case, brand, root_domain]
+    balance_attempts: 30
+  pooled_primary:
+    train_fraction: 0.70
+    val_fraction: 0.15
+    test_fraction: 0.15
+    group_columns: [operator_or_case, brand, root_domain]
+    balance_attempts: 20
+  E3_lofo:
+    val_fraction_within_train: 0.20
+    group_columns: [week8_family_id, operator_or_case, brand, root_domain]
+
+runtime:
+  exclude_isolated_websites: true
+  use_edge_weight: true
+  validate_no_all_zero_feature_columns: true
+  full_batch: true
+  device: auto
+
+heco:
+  selected_temperature: 0.7
+  hidden_dim: 64
+  projection_dim: 64
+  dropout: 0.30
+  top_k_positive: 10
+  min_metapath_support: 1
+  hard_negative_ratio: 0.30
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  encoder_checkpoint_templates:
+    - output/week6/checkpoints/heco_encoder__tau0.7__seed{seed}.pt
+    - output/week5/checkpoints/heco_encoder__tau0.7__seed{seed}.pt
+  metapaths:
+    M1_W_IP_W: hosted_on
+    M2_W_Cert_W: uses_cert
+    M3_W_NS_W: uses_ns
+    M4_W_ExtRef_W: referenced_by
+
+finetune:
+  head_type: mlp_64
+  encoder_lr: 5.0e-4
+  classifier_lr: 5.0e-3
+  uniform_lr: 1.0e-3
+  weight_decay: 1.0e-4
+  max_epochs: 200
+  patience: 25
+  min_epochs_before_early_stop: 50
+  dropout: 0.30
+
+dann:
+  lambda_warmup_epochs: 20
+  lambda_schedule: cosine
+  lambda_max: 1.0
+  domain_loss_weight: 1.0
+  max_epochs: 200
+  min_epochs_before_early_stop: 80
+  mask_warmup_best_state: true
+
+E1_edge_ablation:
+  transfers: [T1_Nordic, T2_PH, T2_ON, T3_DiagnoseFrance]
+  edges_to_remove: [none, hosted_on, uses_cert, uses_ns, registered_via, referenced_by]
+  baseline_edge: none
+  method: source_only
+  paired_bootstrap_B: 1000
+
+E2_logme:
+  min_per_class_per_region: 2
+  metrics: [logme, logme_cross, h_divergence, wasserstein]
+  extra_single_source_pairs_limit: 21
+  paired_bootstrap_B: 1000
+
+E3_lofo:
+  family_patterns:
+    tsars: [tsars]
+    icecasino: [icecasino, icecazino]
+    verdecasino: [verdecasino]
+    ggbet: [ggbet, gbett, ggbbbet, ggonline, gg54, i-ggbet]
+    bcgame: [bcgame, bc-game]
+    cookiecasino: [cookiecasino]
+    goodmancasino: [goodmancasino]
+    freshbet: [freshbet, fresh.]
+    billybillion: [billybillion]
+    bcdot: [bc.]
+  min_family_size_for_lofo: 2
+  permutation_n: 100
+  permutation_seed: 42
+  paired_bootstrap_B: 1000
+
+E4_control_groups:
+  scenarios:
+    S1_licensed:
+      negative_tiers: [licensed_baseline]
+      positive_tiers: [illegal_confirmed_official_single, illegal_confirmed_official_cross_verified]
+    S2_control:
+      negative_tiers: [control_legal_commercial]
+      positive_tiers: [illegal_confirmed_official_single, illegal_confirmed_official_cross_verified]
+    S3_combined:
+      negative_tiers: [licensed_baseline, control_legal_commercial]
+      positive_tiers: [illegal_confirmed_official_single, illegal_confirmed_official_cross_verified]
+  embedding_distance_metric: euclidean
+
+E5_structure_vs_lexical:
+  transfers: [T1_Nordic, T2_PH, T2_ON, T3_DiagnoseFrance]
+  method: source_only
+  configs:
+    C1_full:
+      feature_mode: full
+      edge_mode: full
+    C2_no_cctld:
+      feature_mode: no_cctld
+      edge_mode: full
+    C3_no_website_lexical:
+      feature_mode: zero_website_lexical
+      edge_mode: full
+    C4_graph_only:
+      feature_mode: zero_website_all
+      edge_mode: full
+    C5_lex_only:
+      feature_mode: website_lexical_only
+      edge_mode: empty_all
+    C6_no_edges:
+      feature_mode: full
+      edge_mode: empty_all
+    C7_no_cert_edge:
+      feature_mode: full
+      edge_mode: remove_uses_cert
+    C8_no_registrar_edge:
+      feature_mode: full
+      edge_mode: remove_registered_via
+    C9_infra_edges_only:
+      feature_mode: full
+      edge_mode: infra_only
+
+acceptance_thresholds:
+  H_E1a_min_delta: 0.05
+  H_E1b_abs_delta_max: 0.03
+  H_E1c_min_delta_mean_pred_illegal: 0.10
+  H_E2a_spearman_min: 0.60
+  H_E2c_kendall_min: 0.50
+  H_E3a_lofo_auc_min: 0.85
+  H_E3b_tsars_auc_min: 0.85
+  H_E3c_family_std_max: 0.10
+  H_E4a_control_auc_min: 0.85
+  H_E4b_min_encoder_passes: 4
+  H_E4c_min_encoder_passes: 4
+  H_E5a_t3_no_cctld_drop_max: 0.05
+  H_E5b_t3_graph_only_auc_min: 0.85
+  H_E5c_graph_minus_lex_min: 0.10

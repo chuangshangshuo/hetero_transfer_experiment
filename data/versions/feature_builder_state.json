@@ -1,0 +1,314 @@
+{
+  "graph_version": "v2",
+  "zero_column_policy": "drop_and_fail_fast",
+  "node_feature_builders": {
+    "Website": {
+      "candidate_feature_columns": [
+        "feat_domain_len_z",
+        "feat_root_len_z",
+        "feat_domain_segment_count_z",
+        "feat_digit_count_z",
+        "feat_hyphen_count_z",
+        "feat_is_dot_com",
+        "feat_is_local_tld"
+      ],
+      "active_feature_columns": [
+        "feat_domain_len_z",
+        "feat_root_len_z",
+        "feat_domain_segment_count_z",
+        "feat_digit_count_z",
+        "feat_hyphen_count_z",
+        "feat_is_dot_com",
+        "feat_is_local_tld"
+      ],
+      "dropped_columns": [],
+      "scalers": {
+        "feat_domain_len_z": {
+          "source_column": "domain_len",
+          "mean": 13.382022471910112,
+          "std": 4.086755543151432,
+          "epsilon": 1e-08,
+          "dropped": false
+        },
+        "feat_root_len_z": {
+          "source_column": "root_len",
+          "mean": 9.621187800963082,
+          "std": 3.9300873260135014,
+          "epsilon": 1e-08,
+          "dropped": false
+        },
+        "feat_domain_segment_count_z": {
+          "source_column": "domain_segment_count",
+          "mean": 2.030497592295345,
+          "std": 0.17195199667212943,
+          "epsilon": 1e-08,
+          "dropped": false
+        },
+        "feat_digit_count_z": {
+          "source_column": "digit_count",
+          "mean": 0.6484751203852327,
+          "std": 1.2542166768525163,
+          "epsilon": 1e-08,
+          "dropped": false
+        },
+        "feat_hyphen_count_z": {
+          "source_column": "hyphen_count",
+          "mean": 0.10914927768860354,
+          "std": 0.345987894269466,
+          "epsilon": 1e-08,
+          "dropped": false
+        }
+      },
+      "tier_backfill_counts": {
+        "licensed_baseline": 85,
+        "control_legal_commercial": 34
+      }
+    },
+    "IP": {
+      "candidate_feature_columns": [
+        "feat_is_private",
+        "feat_is_global",
+        "feat_asn_missing",
+        "feat_asn_13335",
+        "feat_asn_16509",
+        "feat_asn_209242",
+        "feat_asn_20940",
+        "feat_asn_54113",
+        "feat_asn_15169",
+        "feat_asn_14618",
+        "feat_asn_16552",
+        "feat_asn_19551",
+        "feat_asn_56630",
+        "feat_asn_16625",
+        "feat_asn_8075",
+        "feat_asn_14537",
+        "feat_asn_213846",
+        "feat_asn_48846",
+        "feat_asn_8560",
+        "feat_asn_other"
+      ],
+      "active_feature_columns": [
+        "feat_is_private",
+        "feat_is_global",
+        "feat_asn_missing",
+        "feat_asn_13335",
+        "feat_asn_16509",
+        "feat_asn_209242",
+        "feat_asn_20940",
+        "feat_asn_54113",
+        "feat_asn_15169",
+        "feat_asn_14618",
+        "feat_asn_16552",
+        "feat_asn_19551",
+        "feat_asn_56630",
+        "feat_asn_16625",
+        "feat_asn_8075",
+        "feat_asn_14537",
+        "feat_asn_213846",
+        "feat_asn_48846",
+        "feat_asn_8560",
+        "feat_asn_other"
+      ],
+      "dropped_columns": [],
+      "asn_vocab": [
+        "13335",
+        "16509",
+        "209242",
+        "20940",
+        "54113",
+        "15169",
+        "14618",
+        "16552",
+        "19551",
+        "56630",
+        "16625",
+        "8075",
+        "14537",
+        "213846",
+        "48846",
+        "8560"
+      ]
+    },
+    "Certificate": {
+      "candidate_feature_columns": [
+        "feat_issuer_family_google_trust_services",
+        "feat_issuer_family_let_s_encrypt",
+        "feat_issuer_family_digicert_inc",
+        "feat_issuer_family_amazon",
+        "feat_issuer_family_sectigo_limited",
+        "feat_issuer_family_globalsign_nv_sa",
+        "feat_issuer_family_gogetssl",
+        "feat_issuer_family_godaddy_com_inc",
+        "feat_issuer_family_certainly",
+        "feat_issuer_family_corporation_service_company",
+        "feat_issuer_family_deutsche_telekom_security_gmbh",
+        "feat_issuer_family_godaddy_com",
+        "feat_issuer_family_gandi",
+        "feat_issuer_family_comodo_ca_limited",
+        "feat_issuer_family_ssl_corporation",
+        "feat_issuer_family_starfield_technologies_inc",
+        "feat_issuer_family_other",
+        "feat_issuer_family_missing",
+        "feat_has_wildcard_san",
+        "feat_has_multi_san"
+      ],
+      "active_feature_columns": [
+        "feat_issuer_family_google_trust_services",
+        "feat_issuer_family_let_s_encrypt",
+        "feat_issuer_family_digicert_inc",
+        "feat_issuer_family_amazon",
+        "feat_issuer_family_sectigo_limited",
+        "feat_issuer_family_globalsign_nv_sa",
+        "feat_issuer_family_gogetssl",
+        "feat_issuer_family_godaddy_com_inc",
+        "feat_issuer_family_certainly",
+        "feat_issuer_family_corporation_service_company",
+        "feat_issuer_family_deutsche_telekom_security_gmbh",
+        "feat_issuer_family_godaddy_com",
+        "feat_issuer_family_gandi",
+        "feat_issuer_family_comodo_ca_limited",
+        "feat_issuer_family_ssl_corporation",
+        "feat_issuer_family_starfield_technologies_inc",
+        "feat_issuer_family_other",
+        "feat_issuer_family_missing",
+        "feat_has_wildcard_san",
+        "feat_has_multi_san"
+      ],
+      "dropped_columns": [],
+      "issuer_family_vocab": [
+        "google trust services",
+        "let's encrypt",
+        "digicert inc",
+        "amazon",
+        "sectigo limited",
+        "globalsign nv-sa",
+        "gogetssl",
+        "godaddy.com, inc.",
+        "certainly",
+        "corporation service company",
+        "deutsche telekom security gmbh",
+        "godaddy.com",
+        "gandi",
+        "comodo ca limited",
+        "ssl corporation",
+        "starfield technologies, inc."
+      ]
+    },
+    "NameServer": {
+      "candidate_feature_columns": [
+        "feat_nameserver_len_z",
+        "feat_nameserver_segment_count_z",
+        "feat_known_provider_hint"
+      ],
+      "active_feature_columns": [
+        "feat_nameserver_len_z",
+        "feat_nameserver_segment_count_z",
+        "feat_known_provider_hint"
+      ],
+      "dropped_columns": [],
+      "scalers": {
+        "feat_nameserver_len_z": {
+          "source_column": "nameserver_len",
+          "mean": 20.1866527632951,
+          "std": 3.8636280414555655,
+          "epsilon": 1e-08,
+          "dropped": false
+        },
+        "feat_nameserver_segment_count_z": {
+          "source_column": "nameserver_segment_count",
+          "mean": 3.3899895724713245,
+          "std": 0.5107232801836104,
+          "epsilon": 1e-08,
+          "dropped": false
+        }
+      }
+    },
+    "Registrar": {
+      "candidate_feature_columns": [
+        "feat_registrar_len_z",
+        "feat_is_numeric"
+      ],
+      "active_feature_columns": [
+        "feat_registrar_len_z",
+        "feat_is_numeric"
+      ],
+      "dropped_columns": [],
+      "scalers": {
+        "feat_registrar_len_z": {
+          "source_column": "registrar_len",
+          "mean": 13.012658227848101,
+          "std": 13.08539979788671,
+          "epsilon": 1e-08,
+          "dropped": false
+        }
+      }
+    },
+    "ExternalReference": {
+      "candidate_feature_columns": [
+        "feat_is_search_discovery",
+        "feat_is_archive_history"
+      ],
+      "active_feature_columns": [
+        "feat_is_search_discovery",
+        "feat_is_archive_history"
+      ],
+      "dropped_columns": []
+    }
+  },
+  "edge_type_triples": {
+    "hosted_on": [
+      "Website",
+      "hosted_on",
+      "IP"
+    ],
+    "uses_cert": [
+      "Website",
+      "uses_cert",
+      "Certificate"
+    ],
+    "uses_ns": [
+      "Website",
+      "uses_ns",
+      "NameServer"
+    ],
+    "registered_via": [
+      "Website",
+      "registered_via",
+      "Registrar"
+    ],
+    "referenced_by": [
+      "Website",
+      "referenced_by",
+      "ExternalReference"
+    ],
+    "rev_hosted_on": [
+      "IP",
+      "rev_hosted_on",
+      "Website"
+    ],
+    "rev_uses_cert": [
+      "Certificate",
+      "rev_uses_cert",
+      "Website"
+    ],
+    "rev_uses_ns": [
+      "NameServer",
+      "rev_uses_ns",
+      "Website"
+    ],
+    "rev_registered_via": [
+      "Registrar",
+      "rev_registered_via",
+      "Website"
+    ],
+    "rev_referenced_by": [
+      "ExternalReference",
+      "rev_referenced_by",
+      "Website"
+    ]
+  },
+  "extref_hub_policy": {
+    "name": "inverse_dst_degree",
+    "degree_threshold": 20
+  }
+}

@@ -1,0 +1,50 @@
+inputs:
+  week4:
+    pooled_primary_summary: output/week4/metrics/pooled_primary_summary.csv
+    same_region_sensitivity_summary: output/week4/metrics/same_region_sensitivity_summary.csv
+  week5:
+    heco_probe_summary: output/week5/metrics/heco_probe_summary.csv
+  week6:
+    cross_verified: output/week6/metrics/cross_verified_pooled_eval.csv
+    finetune_summary: output/week6/metrics/pooled_primary_finetune_summary.csv
+    ablation_table: output/week6/metrics/ablation_table.csv
+    head_ablation_summary: output/week6_head_ablation/metrics/head_ablation_summary.csv
+  week7:
+    transfer_summary: output/week7/metrics/week7_transfer_summary.csv
+    transfer_method_summary: output/week7/metrics/transfer_method_summary.csv
+    transfer_taxonomy: output/week7/metrics/week7_transfer_taxonomy.csv
+    acceptance_audit: output/week7/metrics/week7_acceptance_audit.csv
+  week8:
+    diagnostic_rollup: output/week8/metrics/week8_diagnostic_rollup.csv
+    hard_negative_family_summary: output/week8/metrics/E3_hard_negative_family_summary.csv
+  week8_patch:
+    corrected_e5_raw: output/week8_patch/metrics/E5_structure_vs_lexical.csv
+    corrected_e5_summary: output/week8_patch/metrics/E5_structure_vs_lexical_summary.csv
+    corrected_e5_acceptance: output/week8_patch/metrics/E5_corrected_acceptance_audit.csv
+  week85:
+    acceptance_audit: output/week85/metrics/week85_acceptance_audit.csv
+    expanded_e2_transferability: output/week85/metrics/E2_w85_transferability_metrics.csv
+  week9:
+    fewshot_curve: output/week9/metrics/W9_E1_fewshot_curve.csv
+    fewshot_stability: output/week9/metrics/W9_E2_fewshot_seed_stability.csv
+    fewshot_shortcut_summary: output/week9/metrics/W9_E3_shortcut_aware_summary.csv
+    fewshot_rollup: output/week9/metrics/week9_fewshot_rollup.csv
+    fewshot_acceptance_v2: output/week9/metrics/fewshot_acceptance_audit_v2.csv
+    hard_negative_raw: output/week9/metrics/hard_negative_family_raw.csv
+    hard_negative_summary: output/week9/metrics/hard_negative_family_summary.csv
+    hard_negative_acceptance: output/week9/metrics/hard_negative_family_acceptance.csv
+
+outputs:
+  root: output/week10
+  metrics: output/week10/metrics
+  tables: output/week10/tables
+  figures: output/week10/figures
+  audits: output/week10/audits
+
+is_posthoc_freeze_layer: true
+forbidden_claims:
+  - model comprehensively succeeds
+  - HeCo universally outperforms HeteroGNN
+  - DANN or StruRW solves transfer
+  - LogME reliably predicts transfer
+  - model can perform illegal-family attribution

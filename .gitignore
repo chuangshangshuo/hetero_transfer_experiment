@@ -1,0 +1,69 @@
+# Local secrets and machine-specific settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*token*
+*secret*
+credentials*.json
+service_account*.json
+secrets/
+
+# Python/cache artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local scratch/log noise
+tmp/
+temp/
+cache/
+logs/
+runs/
+rendered/
+*.log
+
+# Large models and graph binaries
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+output/**/checkpoints/
+results/**/checkpoints/
+
+# Raw/sample-level experiment details not intended for public release
+*prediction_rows*.csv
+*predictions*.csv
+*support_samples*.csv
+*_split.csv
+*_splits.csv
+
+# Site-level audit files (contain root_domain / website_id and must not be released)
+*positive_pair_audit*.csv
+*dk_family_assignments*.csv
+*site_level_audit*.csv
+
+# Large intermediate outputs
+*bootstrap_draws*.csv
+*feature_matrix*.csv
+*pca_projection*.csv
+*pair_evidence*.csv
+*phase2_followup_*_full.csv
+*phase2_followup_site_profile.csv
+*phase2_followup_content_feature.csv
+*phase2_followup_redirect_relation.csv
+*phase2_followup_payment_cue.csv
+*phase2_followup_tls_detail_full.csv

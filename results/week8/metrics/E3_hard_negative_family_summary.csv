@@ -1,0 +1,8 @@
+family_id,num_runs,mean_auc,std_auc,recall_at_fpr_0_10,score_gap_pos_minus_neg,threshold,status,paper_safe_interpretation,is_posthoc_diagnostic
+bcdot,5,0.7875,0.1471075286992477,0.25,0.0413007140159606,0.8,failed,This family does not support strong family-level discrimination among illegal sites.,True
+bcgame,5,0.85,0.2,0.6,0.011404263973236,0.8,supported,This family clears the exploratory hard-negative threshold.,True
+freshbet,5,0.425,0.1,0.3,-0.0066743493080139,0.8,failed,This family does not support strong family-level discrimination among illegal sites.,True
+ggbet,5,0.7700000000000001,0.10295630140987,0.02,0.0308295980095863,0.8,failed,This family does not support strong family-level discrimination among illegal sites.,True
+icecasino,5,0.7277777777777777,0.1113192494972993,0.3,0.0092361032962799,0.8,failed,This family does not support strong family-level discrimination among illegal sites.,True
+tsars,5,0.3864197530864197,0.0621712509235267,0.0,0.0295026883482933,0.8,failed,This family does not support strong family-level discrimination among illegal sites.,True
+verdecasino,5,0.40625,0.1767766952966369,0.05,0.0001637339591979,0.8,failed,This family does not support strong family-level discrimination among illegal sites.,True

@@ -1,0 +1,104 @@
+seed: 42
+workspace_root: <workspace_root>
+
+data:
+  source_materials: source_materials
+  graph_output: data/graphs/hetero_graph_v2.pt
+  graph_npz: data/graphs/hetero_graph_v2.npz
+  graph_metadata: data/graphs/hetero_graph_v2_metadata.json
+  builder_state: data/versions/feature_builder_state.json
+  checksum: data/versions/hetero_graph_v2.sha256
+  master_site_registry: data/master_site_registry.csv
+  duplicate_audit: data/duplicate_audit.csv
+  node_feature_schema: data/node_feature_schema.json
+  edge_schema: data/edge_schema.json
+  redirect_audit: data/audits/redirect_audit.csv
+  edge_dedup_summary: data/audits/edge_dedup_summary.csv
+  isolated_website_nodes: data/audits/isolated_website_nodes.csv
+  extref_hub_audit: data/audits/extref_hub_audit.csv
+  website_tier_backfill_audit: data/audits/website_tier_backfill_audit.csv
+  maxmind_asn_db: data/external/maxmind/GeoLite2-ASN.mmdb
+
+schema:
+  semantic_node_types:
+    - Website
+    - IP
+    - Certificate
+    - NameServer
+    - Registrar
+    - ExternalReference
+  semantic_relations:
+    - hosted_on
+    - uses_cert
+    - uses_ns
+    - registered_via
+    - referenced_by
+  pyg_edge_types:
+    - hosted_on
+    - rev_hosted_on
+    - uses_cert
+    - rev_uses_cert
+    - uses_ns
+    - rev_uses_ns
+    - registered_via
+    - rev_registered_via
+    - referenced_by
+    - rev_referenced_by
+  core_metapaths:
+    M1: W-IP-W
+    M2: W-Cert-W
+    M3: W-NS-W
+    M4: W-ExtRef-W
+  extended_metapaths:
+    M5: W-Registrar-W
+    M6: W-IP-NS-IP-W
+
+features:
+  asn_vocab_size: 16
+  issuer_family_vocab_size: 16
+  zscore_epsilon: 1.0e-8
+  drop_all_zero_columns: true
+
+edges:
+  use_edge_weight: true
+  edge_weight_fn: log1p
+  extref_hub_policy: inverse_dst_degree
+  extref_hub_degree_threshold: 20
+  reverse_edge_policy: explicit_materialized
+
+dedup:
+  strict_pair_uniqueness: true
+  forbid_raw_duplicates_in_training: true
+
+redirects:
+  include_in_graph: false
+  audit_only: true
+
+training:
+  exclude_isolated_websites: true
+  validate_no_all_zero_feature_columns: true
+
+transfer_pairs:
+  T1:
+    source: Sweden
+    target: Denmark
+    hypothesis: Nordic infrastructure commonality should transfer.
+  T2:
+    source: Philippines
+    target: Ontario
+    hypothesis: Cross-continent transfer is expected to be difficult.
+  T3:
+    source: Spain
+    target: France
+    hypothesis: IRM should reduce France local-TLD lexical reversal.
+  T4_optional:
+    source: Pooled 9 regions
+    target: Italy
+    hypothesis: Leave-one-region-out robustness check with Italy illegal-only target.
+
+few_shot:
+  shots: [0, 5, 10, 20]
+
+reproducibility:
+  primary_seed: 42
+  stability_seeds: [42, 43, 44, 45, 46]

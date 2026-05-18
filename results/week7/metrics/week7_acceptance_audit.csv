@@ -1,0 +1,5 @@
+transfer_id,criterion,status,observed_value,best_method,threshold,interpretation
+T1_Nordic,max illegal_recall_at_youden >= 0.55,fail_but_interpretable,0.2709677419354838,dann,0.55,"Below acceptance, but supports RQ2 differentiated illegal-family transfer difficulty."
+T2_PH,all target ROC-AUC means <= 0.80 for negative/limited cross-continent finding,pass,0.7458333333333333,dann_strurw,0.8,Cross-continent transfer remains limited; DANN+StruRW improves but stays below 0.80.
+T2_ON,StruRW-family mean_pred_illegal < 0.30 on one-class licensed target,pass,0.0002667256255397,strurw,0.3,"Use as licensed-consistency/anomaly-style counterpoint, not balanced-accuracy victory."
+T3_DiagnoseFrance,best adaptation ROC-AUC >= source_only + 0.02,fail,0.00435477582846,strurw,0.02,StruRW is slightly above source-only but far below the +0.02 transfer-improvement threshold.

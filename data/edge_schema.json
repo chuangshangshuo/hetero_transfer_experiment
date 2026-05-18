@@ -1,0 +1,60 @@
+{
+  "semantic_relations": {
+    "hosted_on": {
+      "src": "Website",
+      "dst": "IP",
+      "materialized_reverse": "rev_hosted_on"
+    },
+    "uses_cert": {
+      "src": "Website",
+      "dst": "Certificate",
+      "materialized_reverse": "rev_uses_cert"
+    },
+    "uses_ns": {
+      "src": "Website",
+      "dst": "NameServer",
+      "materialized_reverse": "rev_uses_ns"
+    },
+    "registered_via": {
+      "src": "Website",
+      "dst": "Registrar",
+      "materialized_reverse": "rev_registered_via"
+    },
+    "referenced_by": {
+      "src": "Website",
+      "dst": "ExternalReference",
+      "materialized_reverse": "rev_referenced_by"
+    }
+  },
+  "pyg_materialized_reverse_edges": {
+    "rev_hosted_on": {
+      "src": "IP",
+      "dst": "Website",
+      "reverse_of": "hosted_on"
+    },
+    "rev_uses_cert": {
+      "src": "Certificate",
+      "dst": "Website",
+      "reverse_of": "uses_cert"
+    },
+    "rev_uses_ns": {
+      "src": "NameServer",
+      "dst": "Website",
+      "reverse_of": "uses_ns"
+    },
+    "rev_registered_via": {
+      "src": "Registrar",
+      "dst": "Website",
+      "reverse_of": "registered_via"
+    },
+    "rev_referenced_by": {
+      "src": "ExternalReference",
+      "dst": "Website",
+      "reverse_of": "referenced_by"
+    }
+  },
+  "redirect_policy": {
+    "include_in_graph": false,
+    "audit_only": true
+  }
+}

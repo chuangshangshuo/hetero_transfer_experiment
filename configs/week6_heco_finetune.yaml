@@ -1,0 +1,109 @@
+workspace_root: <workspace_root>
+
+data:
+  graph_pt: data/graphs/hetero_graph_v2.pt
+  graph_metadata: data/graphs/hetero_graph_v2_metadata.json
+  master_site_registry: data/master_site_registry.csv
+  node_feature_schema: data/node_feature_schema.json
+
+output:
+  root: output/week6
+  splits: output/week6/splits
+  runs: output/week6/runs
+  metrics: output/week6/metrics
+  predictions: output/week6/predictions
+  plots: output/week6/plots
+  logs: output/week6/logs
+  audits: output/week6/audits
+  embeddings: output/week6/embeddings
+  checkpoints: output/week6/checkpoints
+  paper_draft: paper/draft
+  figs: figs
+
+tasks:
+  primary_label_space:
+    - licensed_baseline
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  positive_label_tiers:
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  excluded_tiers:
+    - gray_candidate_minimum
+    - gray_candidate_strong
+    - control_legal_commercial
+
+seeds:
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+
+splits:
+  pooled_primary:
+    train_fraction: 0.70
+    val_fraction: 0.15
+    test_fraction: 0.15
+    strategy: group_shuffle
+    group_columns:
+      - operator_or_case
+      - brand
+      - root_domain
+    balance_attempts: 20
+
+runtime:
+  exclude_isolated_websites: true
+  use_edge_weight: true
+  validate_no_all_zero_feature_columns: true
+  full_batch: true
+  device: auto
+
+heco:
+  selected_temperature: 0.7
+  hidden_dim: 64
+  projection_dim: 64
+  dropout: 0.30
+  top_k_positive: 10
+  min_metapath_support: 1
+  hard_negative_ratio: 0.30
+  pretrain_epochs: 200
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  patience: 30
+  week5_checkpoint_template: output/week5/checkpoints/heco_encoder__tau0.7__seed{seed}.pt
+  generated_checkpoint_template: output/week6/checkpoints/heco_encoder__tau0.7__seed{seed}.pt
+  metapaths:
+    M1_W_IP_W: hosted_on
+    M2_W_Cert_W: uses_cert
+    M3_W_NS_W: uses_ns
+    M4_W_ExtRef_W: referenced_by
+
+finetune:
+  head_type: attention_pool_mlp_64
+  encoder_lr: 5.0e-4
+  classifier_lr: 5.0e-3
+  uniform_lr: 5.0e-4
+  weight_decay: 1.0e-4
+  max_epochs: 300
+  patience: 35
+  min_epochs_before_early_stop: 50
+  dropout: 0.30
+
+visualization:
+  tsne_perplexity: 30
+  tsne_random_state: 42
+
+metrics:
+  primary: roc_auc
+  secondary:
+    - pr_auc
+    - balanced_accuracy
+    - macro_f1
+
+acceptance_thresholds:
+  pooled_auc_mean_min: 0.95
+  pooled_auc_std_max: 0.04
+  heterognn_delta_auc_min: 0.02
+  cross_verified_auc_min: 0.95
+  cross_verified_min_per_seed: 3

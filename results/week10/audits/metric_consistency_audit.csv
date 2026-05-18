@@ -1,0 +1,4 @@
+check,status,observed,expected
+week9_rollup_vs_acceptance_v2_t2_delta,pass,0.3125,0.3125
+week9_rollup_vs_acceptance_v2_t3_delta,pass,0.0096419753086419,0.0096419753086419
+week10_fewshot_uses_w9_stability,pass,output\week9\metrics\W9_E2_fewshot_seed_stability.csv,W9_E2_fewshot_seed_stability.csv

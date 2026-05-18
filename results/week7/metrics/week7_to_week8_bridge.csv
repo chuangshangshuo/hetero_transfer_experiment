@@ -1,0 +1,5 @@
+week7_observation,initial_interpretation_risk,week8_diagnostic_check,revised_interpretation,is_posthoc_diagnostic
+T3 France source-only AUC is very high (0.9861).,Mistaking high AUC for structural generalization.,"Corrected E5: no-ccTLD drop=0.0815, graph-only AUC=0.7134, lex-only AUC=0.9530.",T3 is shortcut-sensitive and substantially lexical/ccTLD-assisted.,True
+T2_PH source-only/adaptation AUC values remain below 0.80.,Treating low unsupervised transfer as total non-transferability.,Week9 few-shot: k=5 target shots per class reaches AUC=0.9250.,T2_PH is hard but few-shot recoverable.,True
+T1_Nordic has one-class target labels and low illegal recall.,Forcing invalid ROC-AUC or calling all methods failed.,One-class metric boundary plus hard-negative family audits.,"T1 is hard transfer evidence under one-class labels, not structural proof.",True
+T2_ON has no illegal target labels and low mean_pred_illegal for StruRW variants.,Calling anomaly-style low illegal probability a standard transfer victory.,One-class target policy and edge/channel diagnostics.,T2_ON is licensed-consistency boundary evidence only.,True

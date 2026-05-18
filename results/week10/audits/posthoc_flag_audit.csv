@@ -1,0 +1,6 @@
+file,status,detail
+output/week10/metrics/final_rq_evidence_table.csv,pass,posthoc_true=20; rows=21
+output/week10/metrics/final_hypothesis_rollup.csv,pass,posthoc_true=31; rows=31
+output/week10/metrics/fewshot_final_summary.csv,pass,posthoc_true=30; rows=30
+output/week10/metrics/hard_negative_family_final_summary.csv,pass,posthoc_true=7; rows=7
+output/week10/metrics/deviation_case_index.csv,pass,posthoc_true=3; rows=3

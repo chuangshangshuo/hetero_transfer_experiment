@@ -1,0 +1,12 @@
+config_id,feature_mode,edge_mode,node_or_edge,name,original_count,transformed_count,transfer_id,seed,is_posthoc
+C7_no_cert_edge,full,remove_uses_cert,edge,Website|hosted_on|IP,1516,1516,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,Website|uses_cert|Certificate,519,0,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,Website|uses_ns|NameServer,1662,1662,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,Website|registered_via|Registrar,252,252,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,Website|referenced_by|ExternalReference,57,57,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,IP|rev_hosted_on|Website,1516,1516,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,Certificate|rev_uses_cert|Website,519,0,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,NameServer|rev_uses_ns|Website,1662,1662,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,Registrar|rev_registered_via|Website,252,252,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,edge,ExternalReference|rev_referenced_by|Website,57,57,T2_ON,45,True
+C7_no_cert_edge,full,remove_uses_cert,node_feature,Website.x_nonzero_columns,7,7,T2_ON,45,True

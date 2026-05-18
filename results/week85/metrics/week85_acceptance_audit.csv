@@ -1,0 +1,13 @@
+patch,hypothesis,status,observed,threshold,interpretation
+P1,E3_balanced_licensed_negative,pass,1.0,min family AUC >= 0.85,illegal-vs-licensed generalization remains strong under balanced test negatives
+P1,E3_hard_illegal_family_detection,fail,0.6218496472663139,mean hard-negative family AUC >= 0.80,hard-negative audit measures family-level discrimination among illegal sites
+P1,E3_hard_tsars_family_detection,fail,0.3864197530864197,tsars hard-negative AUC >= 0.80,critical tsars audit under hard illegal negatives
+P2,E2_expanded_LogME_predicts_quasi_metric,fail,0.073313165276678,Spearman rho >= 0.60,"expanded one-class-aware quasi metric, no GNN retraining"
+P2,E2_expanded_LogME_beats_distance_baselines,fail,0.073313165276678,|rho_LogME| > |rho_H-div| and |rho_W|,"|rho_H-div|=0.1742, |rho_W|=0.1057"
+P3_posthoc,H_E4b_prime_direction_only,pass,4.0,>=4/5 seeds,post-hoc direction-only relaxation; not a prerun Week 8 pass
+P3_posthoc,H_E4c_prime_direction_only,fail,0.0,>=4/5 seeds,post-hoc direction-only relaxation; not a prerun Week 8 pass
+P4_posthoc,H_E5a_prime_cctld_key,pass,0.08153573749187804,T3 full-minus-no-cctld >= 0.05,post-hoc direction reversal: ccTLD is a key mechanism
+P4_posthoc,H_E5b_prime_lex_only_working,pass,0.9529987004548408,T3 lex-only >= 0.85,post-hoc direction reversal: lexical features work independently on T3
+P4_posthoc,H_E5c_prime_transfer_specific_dominance,pass,3.0,3/3 specified directional checks,post-hoc transfer-specific mechanism split
+P4_posthoc,H_E1b_prime_T2PH_negative_transfer_edge,pass,-0.0833333333333333,at least one edge has effect<0 and p<0.05,post-hoc direction reversal for PH channel-specific negative transfer
+P4_posthoc,H_E1c_prime_T2ON_any_significant_edge,pass,2.0,at least one edge p<0.05,post-hoc significant influence criterion for ON one-class target

@@ -1,0 +1,4 @@
+﻿"experiment","hypothesis","metric","threshold","observed","status","note"
+"E3","H_E3a","lofo_family_auc_mean_min",">=0.85","0.992828106852497","provisional_pass","Core LOFO only; permutation audit pending"
+"E3","H_E3b","tsars_lofo_auc_mean",">=0.85","0.998928894050845","provisional_pass","Core LOFO only; permutation audit pending"
+"E3","H_E3c","max_family_auc_std","<0.10","0.0142857142857143","provisional_pass","Core LOFO only; permutation audit pending"

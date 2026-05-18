@@ -1,0 +1,193 @@
+{
+  "created_at_utc": "2026-04-24T01:15:22.148358+00:00",
+  "graph_version": "v2",
+  "schema": "v2_6_nodes_5_relations_10_materialized_edges",
+  "promotion_account_status": "archived_excluded",
+  "node_counts": {
+    "Website": 623,
+    "IP": 1325,
+    "Certificate": 510,
+    "NameServer": 959,
+    "Registrar": 79,
+    "ExternalReference": 53
+  },
+  "forward_unique_edge_counts": {
+    "hosted_on": 1516,
+    "uses_cert": 519,
+    "uses_ns": 1662,
+    "registered_via": 252,
+    "referenced_by": 57
+  },
+  "forward_raw_edge_counts": {
+    "hosted_on": 1889,
+    "uses_cert": 942,
+    "uses_ns": 1690,
+    "registered_via": 253,
+    "referenced_by": 929
+  },
+  "materialized_edge_counts": {
+    "hosted_on": 1516,
+    "rev_hosted_on": 1516,
+    "uses_cert": 519,
+    "rev_uses_cert": 519,
+    "uses_ns": 1662,
+    "rev_uses_ns": 1662,
+    "registered_via": 252,
+    "rev_registered_via": 252,
+    "referenced_by": 57,
+    "rev_referenced_by": 57
+  },
+  "duplicate_root_domain_groups": 187,
+  "source_inputs": {
+    "source_materials\\data\\phase1\\core\\site_profile.csv": 123,
+    "source_materials\\data\\phase1\\core\\infra_relation.csv": 1152,
+    "source_materials\\data\\phase1\\core\\redirect_relation.csv": 166,
+    "source_materials\\data\\phase2\\followup\\illegal_infra_relation.csv": 760,
+    "source_materials\\data\\phase2\\followup\\illegal_tls_certificate_detail.csv": 96,
+    "source_materials\\data\\phase2\\region_expansion\\region_expansion_site_profile.csv": 401,
+    "source_materials\\data\\phase2\\region_expansion\\region_expansion_infra_relation.csv": 4486,
+    "source_materials\\data\\phase2\\region_expansion\\region_expansion_tls_detail.csv": 411,
+    "source_materials\\data\\phase2\\evidence\\search_discovery_registry.csv": 884,
+    "source_materials\\data\\phase2\\evidence\\history_osint_evidence.csv": 48
+  },
+  "maxmind": {
+    "db_path": "D:\\codex\\hetero_transfer_experiment\\data\\external\\maxmind\\GeoLite2-ASN.mmdb",
+    "db_sha256": "b048796a49c0afd94a101ca94eb30d3af6aa1e49ead9d47609a4eb9847f2f5b8",
+    "asn_hits": 1862
+  },
+  "redirect_audit": {
+    "raw_hops_total": 166,
+    "raw_cross_domain_hops": 11,
+    "normalized_cross_site_hops": 7,
+    "mapped_to_graph_pairs": 0
+  },
+  "isolated_websites": {
+    "count": 38,
+    "training_default_excluded": true
+  },
+  "config": {
+    "features": {
+      "asn_vocab_size": 16,
+      "issuer_family_vocab_size": 16,
+      "zscore_epsilon": 1e-08,
+      "drop_all_zero_columns": true
+    },
+    "edges": {
+      "use_edge_weight": true,
+      "edge_weight_fn": "log1p",
+      "extref_hub_policy": "inverse_dst_degree",
+      "extref_hub_degree_threshold": 20,
+      "reverse_edge_policy": "explicit_materialized"
+    },
+    "dedup": {
+      "strict_pair_uniqueness": true,
+      "forbid_raw_duplicates_in_training": true
+    },
+    "redirects": {
+      "include_in_graph": false,
+      "audit_only": true
+    },
+    "training": {
+      "exclude_isolated_websites": true,
+      "validate_no_all_zero_feature_columns": true
+    }
+  },
+  "builder_state_path": "D:\\codex\\hetero_transfer_experiment\\data\\versions\\feature_builder_state.json",
+  "feature_schema": {
+    "Website": {
+      "feature_columns": [
+        "feat_domain_len_z",
+        "feat_root_len_z",
+        "feat_domain_segment_count_z",
+        "feat_digit_count_z",
+        "feat_hyphen_count_z",
+        "feat_is_dot_com",
+        "feat_is_local_tld"
+      ],
+      "feature_dim": 7,
+      "dropped_columns": []
+    },
+    "IP": {
+      "feature_columns": [
+        "feat_is_private",
+        "feat_is_global",
+        "feat_asn_missing",
+        "feat_asn_13335",
+        "feat_asn_16509",
+        "feat_asn_209242",
+        "feat_asn_20940",
+        "feat_asn_54113",
+        "feat_asn_15169",
+        "feat_asn_14618",
+        "feat_asn_16552",
+        "feat_asn_19551",
+        "feat_asn_56630",
+        "feat_asn_16625",
+        "feat_asn_8075",
+        "feat_asn_14537",
+        "feat_asn_213846",
+        "feat_asn_48846",
+        "feat_asn_8560",
+        "feat_asn_other"
+      ],
+      "feature_dim": 20,
+      "dropped_columns": []
+    },
+    "Certificate": {
+      "feature_columns": [
+        "feat_issuer_family_google_trust_services",
+        "feat_issuer_family_let_s_encrypt",
+        "feat_issuer_family_digicert_inc",
+        "feat_issuer_family_amazon",
+        "feat_issuer_family_sectigo_limited",
+        "feat_issuer_family_globalsign_nv_sa",
+        "feat_issuer_family_gogetssl",
+        "feat_issuer_family_godaddy_com_inc",
+        "feat_issuer_family_certainly",
+        "feat_issuer_family_corporation_service_company",
+        "feat_issuer_family_deutsche_telekom_security_gmbh",
+        "feat_issuer_family_godaddy_com",
+        "feat_issuer_family_gandi",
+        "feat_issuer_family_comodo_ca_limited",
+        "feat_issuer_family_ssl_corporation",
+        "feat_issuer_family_starfield_technologies_inc",
+        "feat_issuer_family_other",
+        "feat_issuer_family_missing",
+        "feat_has_wildcard_san",
+        "feat_has_multi_san"
+      ],
+      "feature_dim": 20,
+      "dropped_columns": []
+    },
+    "NameServer": {
+      "feature_columns": [
+        "feat_nameserver_len_z",
+        "feat_nameserver_segment_count_z",
+        "feat_known_provider_hint"
+      ],
+      "feature_dim": 3,
+      "dropped_columns": []
+    },
+    "Registrar": {
+      "feature_columns": [
+        "feat_registrar_len_z",
+        "feat_is_numeric"
+      ],
+      "feature_dim": 2,
+      "dropped_columns": []
+    },
+    "ExternalReference": {
+      "feature_columns": [
+        "feat_is_search_discovery",
+        "feat_is_archive_history"
+      ],
+      "feature_dim": 2,
+      "dropped_columns": []
+    }
+  },
+  "graph_npz": "D:\\codex\\hetero_transfer_experiment\\data\\graphs\\hetero_graph_v2.npz",
+  "pyg_export": {
+    "available": true,
+    "path": "D:\\codex\\hetero_transfer_experiment\\data\\graphs\\hetero_graph_v2.pt"
+  }
+}

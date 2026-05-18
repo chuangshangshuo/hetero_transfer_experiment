@@ -1,0 +1,187 @@
+workspace_root: <workspace_root>
+
+data:
+  graph_pt: data/graphs/hetero_graph_v2.pt
+  graph_metadata: data/graphs/hetero_graph_v2_metadata.json
+  master_site_registry: data/master_site_registry.csv
+  node_feature_schema: data/node_feature_schema.json
+
+output:
+  root: output/week7
+  splits: output/week7/splits
+  runs: output/week7/runs
+  metrics: output/week7/metrics
+  logs: output/week7/logs
+  audits: output/week7/audits
+  plots: output/week7/plots
+
+tasks:
+  primary_label_space:
+    - licensed_baseline
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  positive_label_tiers:
+    - illegal_confirmed_official_single
+    - illegal_confirmed_official_cross_verified
+  excluded_tiers:
+    - gray_candidate_minimum
+    - gray_candidate_strong
+    - control_legal_commercial
+
+seeds:
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+
+methods:
+  - source_only
+  - dann
+  - strurw
+  - dann_strurw
+
+transfer_pairs:
+  T1_Nordic:
+    source_regions:
+      - Sweden
+      - Spain
+      - Italy
+    target_regions:
+      - Denmark
+    primary_metric: illegal_recall_at_youden
+    primary_metric_direction: higher_is_better
+    incomplete_target_policy: illegal_recall_at_youden_boundary
+  T2_PH:
+    source_regions:
+      - Spain
+      - Sweden
+      - Italy
+      - Belgium
+      - France
+      - Germany
+      - United Kingdom
+      - Netherlands
+    target_regions:
+      - Philippines
+    primary_metric: roc_auc
+    incomplete_target_policy: standard_binary_eval
+  T2_ON:
+    source_regions:
+      - Spain
+      - Sweden
+      - Italy
+      - Belgium
+      - France
+      - Germany
+      - United Kingdom
+      - Netherlands
+    target_regions:
+      - Ontario
+    primary_metric: mean_pred_illegal
+    primary_metric_direction: lower_is_better
+    incomplete_target_policy: licensed_consistency_and_anomaly_score
+  T3_DiagnoseFrance:
+    source_regions:
+      - Spain
+      - Italy
+    target_regions:
+      - France
+    primary_metric: roc_auc
+    incomplete_target_policy: standard_binary_eval
+
+splits:
+  transfer:
+    source_val_fraction: 0.20
+    target_test_fraction: 0.40
+    group_columns:
+      - operator_or_case
+      - brand
+      - root_domain
+    balance_attempts: 30
+
+runtime:
+  exclude_isolated_websites: true
+  use_edge_weight: true
+  validate_no_all_zero_feature_columns: true
+  full_batch: true
+  device: auto
+
+heco:
+  selected_temperature: 0.7
+  hidden_dim: 64
+  projection_dim: 64
+  dropout: 0.30
+  top_k_positive: 10
+  min_metapath_support: 1
+  hard_negative_ratio: 0.30
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  encoder_checkpoint_templates:
+    - output/week6/checkpoints/heco_encoder__tau0.7__seed{seed}.pt
+    - output/week5/checkpoints/heco_encoder__tau0.7__seed{seed}.pt
+  metapaths:
+    M1_W_IP_W: hosted_on
+    M2_W_Cert_W: uses_cert
+    M3_W_NS_W: uses_ns
+    M4_W_ExtRef_W: referenced_by
+
+finetune:
+  head_type: mlp_64
+  encoder_lr: 5.0e-4
+  classifier_lr: 5.0e-3
+  weight_decay: 1.0e-4
+  max_epochs: 200
+  patience: 25
+  min_epochs_before_early_stop: 50
+  dropout: 0.30
+
+dann:
+  lambda_warmup_epochs: 20
+  lambda_schedule: cosine
+  lambda_max: 1.0
+  domain_loss_weight: 1.0
+  max_epochs: 200
+  min_epochs_before_early_stop: 80
+  mask_warmup_best_state: true
+
+strurw:
+  pseudo_label_iterations: 2
+  pseudo_labeler_max_epochs: 80
+  pseudo_labeler_min_epochs_before_early_stop: 40
+  pseudo_labeler_patience: 10
+  pseudo_labeler_select_last_state: true
+  pseudo_confidence_threshold: 0.7
+  pseudo_label_strategy: entropy_top_fraction
+  entropy_top_fraction: 0.30
+  final_max_epochs: 200
+  final_min_epochs_before_early_stop: 200
+  final_force_full_epochs: true
+  final_select_last_state_for_source_only: true
+  edge_weight_clip:
+    - 0.1
+    - 10.0
+  laplace_alpha: 1.0
+  metapath_relations:
+    - hosted_on
+    - uses_cert
+    - uses_ns
+    - registered_via
+    - referenced_by
+
+metrics:
+  primary: roc_auc
+  secondary:
+    - pr_auc
+    - balanced_accuracy
+    - macro_f1
+    - licensed_consistency
+    - illegal_consistency
+    - target_mean_pred_illegal
+
+acceptance_thresholds:
+  T1_illegal_recall_at_youden_min: 0.55
+  T2_PH_target_auc_max_for_negative_finding: 0.80
+  T2_ON_mean_pred_illegal_max: 0.30
+  T3_dann_minus_source_only_auc_delta: 0.02
+  T3_strurw_minus_source_only_auc_delta: 0.02

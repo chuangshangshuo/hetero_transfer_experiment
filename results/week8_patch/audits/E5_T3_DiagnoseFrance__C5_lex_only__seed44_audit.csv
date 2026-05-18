@@ -1,0 +1,12 @@
+config_id,feature_mode,edge_mode,node_or_edge,name,original_count,transformed_count,transfer_id,seed,is_posthoc
+C5_lex_only,website_lexical_only,empty_all,edge,Website|hosted_on|IP,1516,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,Website|uses_cert|Certificate,519,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,Website|uses_ns|NameServer,1662,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,Website|registered_via|Registrar,252,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,Website|referenced_by|ExternalReference,57,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,IP|rev_hosted_on|Website,1516,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,Certificate|rev_uses_cert|Website,519,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,NameServer|rev_uses_ns|Website,1662,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,Registrar|rev_registered_via|Website,252,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,edge,ExternalReference|rev_referenced_by|Website,57,0,T3_DiagnoseFrance,44,True
+C5_lex_only,website_lexical_only,empty_all,node_feature,Website.x_nonzero_columns,7,7,T3_DiagnoseFrance,44,True

@@ -1,0 +1,6 @@
+seed,temperature,encoder_checkpoint,encoder_source
+42,0.7,<workspace_root>\output\week5\checkpoints\heco_encoder__tau0.7__seed42.pt,existing_checkpoint
+43,0.7,<workspace_root>\output\week6\checkpoints\heco_encoder__tau0.7__seed43.pt,existing_checkpoint
+44,0.7,<workspace_root>\output\week6\checkpoints\heco_encoder__tau0.7__seed44.pt,existing_checkpoint
+45,0.7,<workspace_root>\output\week6\checkpoints\heco_encoder__tau0.7__seed45.pt,existing_checkpoint
+46,0.7,<workspace_root>\output\week6\checkpoints\heco_encoder__tau0.7__seed46.pt,existing_checkpoint

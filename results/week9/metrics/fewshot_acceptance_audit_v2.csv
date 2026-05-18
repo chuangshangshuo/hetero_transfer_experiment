@@ -1,0 +1,3 @@
+target,best_shot,best_auc,delta,status,source_file,is_posthoc
+T2_PH,10,0.9541666666666666,0.3125,posthoc_support,output/week9/metrics/week9_fewshot_rollup.csv,True
+T3,10,0.9957654320987654,0.009641975308641993,no_clear_gain,output/week9/metrics/week9_fewshot_rollup.csv,True

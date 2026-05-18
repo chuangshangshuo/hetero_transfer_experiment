@@ -1,0 +1,10 @@
+row,model,auc_mean,auc_std,source,notes
+1,RF + GroupKFold (legacy phase2),0.921,,phase2 historical,"Historical reference, not rerun in Week 6."
+2,Logistic Regression,0.8938436323292006,0.0589589056013301,Week 4 group-aware pooled baseline,Website feature baseline.
+3,MLP (features),0.8876123401623104,0.0571471382069332,Week 4 group-aware pooled baseline,Website feature MLP baseline.
+4,HeteroGNN-only,0.927738949238232,0.0749543680418093,Week 4 group-aware pooled baseline,Week 4 HeteroConv graph baseline.
+5,HeCo frozen encoder + linear probe,0.917960088691796,,Week 5 single seed tau=0.7,Single seed tau=0.7 selected by frozen validation AUC.
+6,HeCo pretrain + full finetune,0.9793052475979304,,Week 5 single seed tau=0.7,"Single seed tau=0.7, uniform LR Week 5 reference."
+7,HeCo + Disc-LR finetune (5 seed),0.9321514888634772,0.0715583025334608,Week 6 five-seed HeCo discriminative-LR finetune,Week 6 planned main result; threshold audit required because seed variance is high.
+8,HeCo + uniform-LR finetune fallback (5 seed),0.9337107842939232,0.0740180393722444,Week 6 five-seed HeCo uniform-LR fallback audit,Fallback audit from Week 6 risk plan; not better than Disc-LR under current splits.
+9,Cross-verified primary layer evaluation,0.9797619047619048,,Week 6 cross_verified vs licensed pooled test evaluation,"RQ1 evidence-layer evaluation, not a model ablation row."

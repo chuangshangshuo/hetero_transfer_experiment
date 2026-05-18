@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "Heterogeneous Graph Transfer Experiment for Illegal-vs-Licensed Website Recognition"
+message: "If you use this experiment package, please cite the repository and the accompanying report."
+type: software
+date-released: 2026-05-10
+repository-code: "https://github.com/chuangshangshuo/hetero_transfer_experiment"
+authors:
+  - name: "Duziteng"

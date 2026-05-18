@@ -1,0 +1,16 @@
+experiment,hypothesis,observed_metric,observed_value,threshold,status,details
+E1,H_E1a,max_T3_drop_from_removing_hosted_on_or_uses_cert,0.0706842105263157,>=0.05 and 95% CI excludes 0,pass,"best_edge=uses_cert, ci_lo=0.0210"
+E1,H_E1b,max_abs_T2_PH_delta_auc,0.0833333333333333,<0.03 for all five edges,fail,largest_edge=registered_via
+E1,H_E1c,max_T2_ON_mean_pred_illegal_increase,0.0321962876669954,>=0.10 for -uses_ns or -registered_via,fail,best_edge=registered_via
+E2,H_E2a,LogME_AUC_spearman_rho,0.2754284510685156,rho>=0.60 and p<0.05,fail,"p=0.1407, aligned_rows=30"
+E2,H_E2b,abs_rho_LogME_vs_baselines,0.2754284510685156,|rho_LogME| > |rho_H-div| and > |rho_W|,fail,"|rho_H-div|=0.3925, |rho_W|=0.0432"
+E2,H_E2c,LogME_AUC_kendall_tau,0.1824485235100906,tau>=0.50,fail,aligned_rows=30
+E3,H_E3a,min_family_lofo_auc_mean,0.9928281068524972,>=0.85,pass,"families=7; permutation real_minus_random=-0.0005, p_real_lower=0.160"
+E3,H_E3b,tsars_lofo_auc_mean,0.9989288940508452,>=0.85,pass,critical W6 cross-verified robustness check
+E3,H_E3c,max_family_auc_std,0.0142857142857142,<0.10,pass,all eligible families use five seeds
+E4,H_E4a,S2_illegal_vs_control_auc_mean,0.970424193861694,>=0.85,pass,control_legal_commercial reintroduced only for E4
+E4,H_E4b,encoder_pass_count,0.0,>=4/5 encoders,fail,"d(illegal,control) > d(illegal,licensed)+0.5sigma"
+E4,H_E4c,encoder_pass_count,0.0,>=4/5 encoders,fail,"d(licensed,control) > d(licensed,illegal)"
+E5,H_E5a,T3_full_minus_no_cctld_auc,0.08153573749187804,<0.05 drop,fail,"C1=0.9861, C2=0.9046"
+E5,H_E5b,T3_graph_only_auc_mean,0.7134294996751137,>=0.85,fail,"Website.x zeroed, Graph v2 edges retained"
+E5,H_E5c,T3_graph_only_minus_lex_only_auc,-0.2395692007797271,>=0.10 and CI excludes 0,fail,"C4=0.7134, C5=0.9530, paired_ci=[-0.2968,-0.1921]"

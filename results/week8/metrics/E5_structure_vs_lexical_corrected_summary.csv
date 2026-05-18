@@ -1,0 +1,37 @@
+transfer_id,condition,auc,metric_value,delta_vs_full,interpretation,is_posthoc_diagnostic
+T1_Nordic,full,,0.2064516129032258,0.0,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,no_cctld,,0.2,-0.006451612903225795,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,no_website_lexical,,0.0451612903225806,-0.1612903225806452,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,graph_only,,0.0451612903225806,-0.1612903225806452,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,lex_only,,0.3548387096774193,0.1483870967741935,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,no_edges,,0.3548387096774193,0.1483870967741935,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,no_cert_edge,,0.2387096774193548,0.032258064516129004,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,no_registrar_edge,,0.2451612903225806,0.0387096774193548,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T1_Nordic,infra_edges_only,,0.2129032258064516,0.006451612903225795,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,full,,0.3027596900275405,0.0,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,no_cctld,,0.2952332848143072,-0.007526405213233278,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,no_website_lexical,,0.4260639569676095,0.12330426694006902,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,graph_only,,0.4260639569676095,0.12330426694006902,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,lex_only,,0.3225775591330603,0.019817869105519803,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,no_edges,,0.3225775591330603,0.019817869105519803,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,no_cert_edge,,0.3067061935945654,0.003946503567024917,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,no_registrar_edge,,0.334955977694536,0.032196287666995504,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_ON,infra_edges_only,,0.3027596900275405,0.0,One-class target metric condition; ROC-AUC is undefined and this is not binary transfer evidence.,True
+T2_PH,full,0.6416666666666666,0.6416666666666666,0.0,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,no_cctld,0.6041666666666667,0.6041666666666667,-0.03749999999999987,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,no_website_lexical,0.5979166666666667,0.5979166666666667,-0.043749999999999956,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,graph_only,0.5979166666666667,0.5979166666666667,-0.043749999999999956,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,lex_only,0.5520833333333333,0.5520833333333333,-0.08958333333333335,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,no_edges,0.5520833333333333,0.5520833333333333,-0.08958333333333335,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,no_cert_edge,0.5875,0.5875,-0.054166666666666585,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,no_registrar_edge,0.725,0.725,0.08333333333333337,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T2_PH,infra_edges_only,0.6416666666666666,0.6416666666666666,0.0,Binary target AUC diagnostic condition; interpret relative to full model.,True
+T3_DiagnoseFrance,full,0.9861234567901236,0.9861234567901236,0.0,High T3 performance baseline; requires diagnostic attribution.,True
+T3_DiagnoseFrance,no_cctld,0.9045877192982456,0.9045877192982456,-0.08153573749187804,Removing ccTLD/local-TLD features causes a material performance drop.,True
+T3_DiagnoseFrance,no_website_lexical,0.7134294996751137,0.7134294996751137,-0.2726939571150099,Removing Website lexical information substantially weakens T3.,True
+T3_DiagnoseFrance,graph_only,0.7134294996751137,0.7134294996751137,-0.2726939571150099,Graph-only AUC is lower than lex-only; not pure structural evidence.,True
+T3_DiagnoseFrance,lex_only,0.9529987004548408,0.9529987004548408,-0.03312475633528278,"Lex-only is strong, indicating substantial lexical/ccTLD assistance.",True
+T3_DiagnoseFrance,no_edges,0.9529987004548408,0.9529987004548408,-0.03312475633528278,Condition contributes to the corrected E5 shortcut/feature-boundary diagnosis.,True
+T3_DiagnoseFrance,no_cert_edge,0.9154392462638076,0.9154392462638076,-0.07068421052631602,Condition contributes to the corrected E5 shortcut/feature-boundary diagnosis.,True
+T3_DiagnoseFrance,no_registrar_edge,0.9210526315789472,0.9210526315789472,-0.06507082521117635,Condition contributes to the corrected E5 shortcut/feature-boundary diagnosis.,True
+T3_DiagnoseFrance,infra_edges_only,0.9861234567901236,0.9861234567901236,0.0,Condition contributes to the corrected E5 shortcut/feature-boundary diagnosis.,True

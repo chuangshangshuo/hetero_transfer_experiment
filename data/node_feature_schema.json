@@ -1,0 +1,92 @@
+{
+  "Website": {
+    "feature_columns": [
+      "feat_domain_len_z",
+      "feat_root_len_z",
+      "feat_domain_segment_count_z",
+      "feat_digit_count_z",
+      "feat_hyphen_count_z",
+      "feat_is_dot_com",
+      "feat_is_local_tld"
+    ],
+    "feature_dim": 7,
+    "dropped_columns": []
+  },
+  "IP": {
+    "feature_columns": [
+      "feat_is_private",
+      "feat_is_global",
+      "feat_asn_missing",
+      "feat_asn_13335",
+      "feat_asn_16509",
+      "feat_asn_209242",
+      "feat_asn_20940",
+      "feat_asn_54113",
+      "feat_asn_15169",
+      "feat_asn_14618",
+      "feat_asn_16552",
+      "feat_asn_19551",
+      "feat_asn_56630",
+      "feat_asn_16625",
+      "feat_asn_8075",
+      "feat_asn_14537",
+      "feat_asn_213846",
+      "feat_asn_48846",
+      "feat_asn_8560",
+      "feat_asn_other"
+    ],
+    "feature_dim": 20,
+    "dropped_columns": []
+  },
+  "Certificate": {
+    "feature_columns": [
+      "feat_issuer_family_google_trust_services",
+      "feat_issuer_family_let_s_encrypt",
+      "feat_issuer_family_digicert_inc",
+      "feat_issuer_family_amazon",
+      "feat_issuer_family_sectigo_limited",
+      "feat_issuer_family_globalsign_nv_sa",
+      "feat_issuer_family_gogetssl",
+      "feat_issuer_family_godaddy_com_inc",
+      "feat_issuer_family_certainly",
+      "feat_issuer_family_corporation_service_company",
+      "feat_issuer_family_deutsche_telekom_security_gmbh",
+      "feat_issuer_family_godaddy_com",
+      "feat_issuer_family_gandi",
+      "feat_issuer_family_comodo_ca_limited",
+      "feat_issuer_family_ssl_corporation",
+      "feat_issuer_family_starfield_technologies_inc",
+      "feat_issuer_family_other",
+      "feat_issuer_family_missing",
+      "feat_has_wildcard_san",
+      "feat_has_multi_san"
+    ],
+    "feature_dim": 20,
+    "dropped_columns": []
+  },
+  "NameServer": {
+    "feature_columns": [
+      "feat_nameserver_len_z",
+      "feat_nameserver_segment_count_z",
+      "feat_known_provider_hint"
+    ],
+    "feature_dim": 3,
+    "dropped_columns": []
+  },
+  "Registrar": {
+    "feature_columns": [
+      "feat_registrar_len_z",
+      "feat_is_numeric"
+    ],
+    "feature_dim": 2,
+    "dropped_columns": []
+  },
+  "ExternalReference": {
+    "feature_columns": [
+      "feat_is_search_discovery",
+      "feat_is_archive_history"
+    ],
+    "feature_dim": 2,
+    "dropped_columns": []
+  }
+}

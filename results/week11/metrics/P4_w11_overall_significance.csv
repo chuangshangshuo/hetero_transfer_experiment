@@ -1,0 +1,6 @@
+scope,num_tests,holm_bootstrap_reject_count,holm_wilcoxon_reject_count,is_prerun_frozen,paper_safe_claim
+W7_method_pairwise,24,9.0,0.0,True,W7 method comparisons are now auditable with paired uncertainty.
+W9_fewshot_vs_0shot,8,5.0,0.0,True,W9 few-shot gains are statistically summarized without changing the target-dependent claim.
+W11_P1_family_metric,35,,,True,Included in Week11 acceptance by preregistered effect thresholds.
+W11_P2_invariance,125,,,True,Included in Week11 acceptance by preregistered effect thresholds.
+W11_P3_full_fewshot,100,,,True,Included in Week11 acceptance by preregistered effect thresholds.

@@ -1,0 +1,11 @@
+﻿{
+    "created_at_utc":  "2026-04-28T09:51:54.0437774Z",
+    "file":  "output/week8/audits/predeclared_hypotheses.md",
+    "sha256":  "3187e41047d7bd33744dc26e6356427852dbfb06fb3c4d00516ebf22a4d7dd56",
+    "source_files":  [
+                         "<user_home>/Desktop/predeclared_hypotheses.md",
+                         "<user_home>/Desktop/Week8_实验设计文档.md",
+                         "<user_home>/Desktop/Week8_验收标准简表.md"
+                     ],
+    "note":  "Hash recorded after copying the prerun hypothesis file into the Week 8 audit directory; thresholds remain unchanged."
+}
