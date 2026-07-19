@@ -1,3 +1,4 @@
+"""Audit released artifacts: row counts, post-hoc flags, and headline metrics."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,10 +12,12 @@ OUT = ROOT / "output" / "final_artifact_audit.csv"
 
 
 def rel(path: str) -> Path:
+    """Rel."""
     return ROOT / path
 
 
 def read_csv(path: str) -> pd.DataFrame | None:
+    """Read CSV."""
     full = rel(path)
     if not full.exists():
         return None
@@ -22,6 +25,7 @@ def read_csv(path: str) -> pd.DataFrame | None:
 
 
 def add(rows: list[dict[str, Any]], check: str, status: str, observed: Any, expected: Any, detail: str = "") -> None:
+    """Add."""
     rows.append(
         {
             "check": check,
@@ -34,6 +38,7 @@ def add(rows: list[dict[str, Any]], check: str, status: str, observed: Any, expe
 
 
 def check_csv_rows(rows: list[dict[str, Any]], path: str, expected_rows: int) -> None:
+    """Validate CSV rows."""
     frame = read_csv(path)
     if frame is None:
         add(rows, f"{path}:exists", "fail", "missing", "present")
@@ -44,6 +49,7 @@ def check_csv_rows(rows: list[dict[str, Any]], path: str, expected_rows: int) ->
 
 
 def check_dir_file_count(rows: list[dict[str, Any]], path: str, expected_files: int, pattern: str = "*") -> None:
+    """Validate directory file count."""
     full = rel(path)
     if not full.exists():
         add(rows, f"{path}:exists", "fail", "missing", "present")
@@ -60,6 +66,7 @@ def check_posthoc(
     should_all_true: bool = True,
     column: str = "is_posthoc",
 ) -> None:
+    """Validate post-hoc."""
     frame = read_csv(path)
     if frame is None:
         add(rows, f"{path}:posthoc_column", "fail", "missing_file", f"{column} column")
@@ -83,6 +90,7 @@ def check_column_all_value(
     column: str,
     expected_value: str,
 ) -> None:
+    """Validate column all value."""
     frame = read_csv(path)
     if frame is None:
         add(rows, f"{path}:{column}", "fail", "missing_file", expected_value)
@@ -98,6 +106,7 @@ def check_column_all_value(
 
 
 def check_legacy_marker(rows: list[dict[str, Any]], path: str) -> None:
+    """Validate legacy marker."""
     frame = read_csv(path)
     if frame is None:
         add(rows, f"{path}:legacy_marker", "fail", "missing_file", "legacy marker")
@@ -114,6 +123,7 @@ def check_legacy_marker(rows: list[dict[str, Any]], path: str) -> None:
 
 
 def check_claim_columns(rows: list[dict[str, Any]], path: str) -> None:
+    """Validate claim columns."""
     frame = read_csv(path)
     required = {"status", "is_posthoc", "paper_safe_claim", "paper_forbidden_claim"}
     if frame is None:
@@ -127,6 +137,7 @@ def check_claim_columns(rows: list[dict[str, Any]], path: str) -> None:
 
 
 def first_value(frame: pd.DataFrame, mask: pd.Series, column: str) -> float | None:
+    """First value."""
     subset = frame[mask]
     if subset.empty or column not in subset.columns:
         return None
@@ -146,6 +157,7 @@ def check_metric_close(
     expected: float,
     tolerance: float = 1.0e-4,
 ) -> None:
+    """Validate metric close."""
     frame = read_csv(path)
     if frame is None:
         add(rows, check, "fail", "missing_file", expected, path)
@@ -162,6 +174,7 @@ def check_metric_close(
 
 
 def check_status_counts(rows: list[dict[str, Any]]) -> None:
+    """Validate status counts."""
     frame = read_csv("output/week8/metrics/week8_acceptance_audit.csv")
     if frame is None or "status" not in frame.columns:
         add(rows, "week8_acceptance_status_counts", "fail", "missing", "5 pass / 10 fail")
@@ -173,6 +186,7 @@ def check_status_counts(rows: list[dict[str, Any]]) -> None:
 
 
 def check_final_rollup_posthoc(rows: list[dict[str, Any]]) -> None:
+    """Validate final rollup post-hoc."""
     frame = read_csv("output/week10/metrics/final_hypothesis_rollup.csv")
     if frame is None:
         add(rows, "final_rollup_posthoc_marking", "fail", "missing_file", "posthoc rows marked")
@@ -188,6 +202,7 @@ def check_final_rollup_posthoc(rows: list[dict[str, Any]]) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     rows: list[dict[str, Any]] = []
     expected_csvs = {
         "output/week7/metrics/transfer_summary.csv": 80,

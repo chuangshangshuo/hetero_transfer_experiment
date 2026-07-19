@@ -1,3 +1,4 @@
+"""Build Website->ExternalReference referenced_by edges."""
 from __future__ import annotations
 
 import pandas as pd
@@ -11,6 +12,7 @@ def build_referenced_by_edges(
     *,
     hub_degree_threshold: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build referenced by edges."""
     grouped = aggregate_edge_pairs(raw_df, "referenced_by", node_index["Website"], node_index["ExternalReference"])
     if grouped.empty:
         empty_hub = pd.DataFrame(columns=["dst_id", "dst_degree", "hub_flag"])

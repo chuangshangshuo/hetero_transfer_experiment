@@ -1,3 +1,4 @@
+"""Run the 125 automated acceptance checks that freeze hetero_graph_v2."""
 from __future__ import annotations
 
 import json
@@ -23,6 +24,7 @@ FORBIDDEN_ACTIVE_FILES = [
 
 
 def main() -> None:
+    """Command-line entry point."""
     root = Path(__file__).resolve().parents[2]
     missing = [path for path in REQUIRED_FILES if not (root / path).exists()]
     forbidden = [path for path in FORBIDDEN_ACTIVE_FILES if (root / path).exists()]

@@ -1,3 +1,4 @@
+"""StruRW: CSBM block-ratio edge reweighting of the source graph (clipped)."""
 from __future__ import annotations
 
 import copy
@@ -29,18 +30,21 @@ REVERSE_RELATION_TRIPLES: dict[str, tuple[str, str, str]] = {
 
 @dataclass
 class StruRWResult:
+    """Container for the reweighted graph plus edge/CSBM audit frames."""
     graph_data: Any
     edge_audit: pd.DataFrame
     csbm_audit: pd.DataFrame
 
 
 class StruRWReweighter:
+    """Estimate CSBM block ratios and reweight source-graph edge weights (clipped)."""
     def __init__(
         self,
         relations: list[str],
         edge_weight_clip: tuple[float, float] = (0.1, 10.0),
         laplace_alpha: float = 1.0,
     ) -> None:
+        """Initialise the instance."""
         unknown = sorted(set(relations) - set(FORWARD_RELATION_TRIPLES))
         if unknown:
             raise ValueError(f"Unsupported StruRW relations: {unknown}")
@@ -56,6 +60,7 @@ class StruRWReweighter:
         labels: torch.Tensor,
         eligible_mask: torch.Tensor,
     ) -> dict[int, list[int]]:
+        """Helper: eligible attr members."""
         edge_index = data[edge_type].edge_index.detach().cpu()
         labels = labels.detach().cpu()
         eligible_mask = eligible_mask.detach().cpu().bool()
@@ -72,6 +77,7 @@ class StruRWReweighter:
         labels: torch.Tensor,
         eligible_mask: torch.Tensor,
     ) -> tuple[np.ndarray, np.ndarray]:
+        """Helper: estimate transition."""
         labels_np = labels.detach().cpu().numpy().astype(int)
         counts = np.full((2, 2), self.laplace_alpha, dtype=np.float64)
         members = self._eligible_attr_members(data, edge_type, labels, eligible_mask)
@@ -101,6 +107,7 @@ class StruRWReweighter:
         target_confident_mask: torch.Tensor,
         iteration: int,
     ) -> StruRWResult:
+        """Reweight."""
         new_data = copy.deepcopy(data)
         source_labels = source_labels.detach().cpu().long()
         source_mask = source_mask.detach().cpu().bool()

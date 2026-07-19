@@ -1,3 +1,4 @@
+"""Corrected E5 structure-vs-lexical configuration rerun aggregation."""
 from __future__ import annotations
 
 import json
@@ -19,6 +20,7 @@ OUT = ROOT / "output" / "week8_patch"
 
 
 def _load_raw() -> pd.DataFrame:
+    """Load raw."""
     path = OUT / "metrics" / "E5_structure_vs_lexical.csv"
     if not path.exists():
         raise FileNotFoundError(path)
@@ -26,6 +28,7 @@ def _load_raw() -> pd.DataFrame:
 
 
 def build_delta_table(raw: pd.DataFrame) -> pd.DataFrame:
+    """Build delta table."""
     rows: list[dict[str, Any]] = []
     for transfer_id, part in raw.groupby("transfer_id"):
         full = part[part["config_id"] == "C1_full"].set_index("seed")["primary_metric_value"]
@@ -57,9 +60,11 @@ def build_delta_table(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_acceptance(delta: pd.DataFrame) -> pd.DataFrame:
+    """Build acceptance."""
     t3 = delta[delta["transfer_id"] == "T3_DiagnoseFrance"].set_index("config_id")
     rows = []
     def value(config_id: str, column: str) -> float:
+        """Value."""
         return float(t3.loc[config_id, column])
 
     no_cctld_drop = value("C2_no_cctld", "effect_full_minus_config_when_higher_is_better")
@@ -135,6 +140,7 @@ def build_acceptance(delta: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_split_audit(bundle: Any, raw: pd.DataFrame) -> pd.DataFrame:
+    """Build split audit."""
     rows: list[pd.DataFrame] = []
     for _, run in raw[["transfer_id", "config_id", "seed"]].drop_duplicates().iterrows():
         split_path = ROOT / "output" / "week7" / "splits" / f"{run.transfer_id}__seed{int(run.seed)}.csv"
@@ -144,6 +150,7 @@ def build_split_audit(bundle: Any, raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def patch_manifest_audit_reference() -> None:
+    """Patch manifest audit reference."""
     for path in (OUT / "runs").glob("E5_*.json"):
         payload = json.loads(path.read_text(encoding="utf-8"))
         payload["is_posthoc"] = True
@@ -152,6 +159,7 @@ def patch_manifest_audit_reference() -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     bundle = load_graph_bundle(ROOT / "configs" / "week8.yaml")
     raw = _load_raw()
     delta = build_delta_table(raw)

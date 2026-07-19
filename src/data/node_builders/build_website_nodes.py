@@ -1,3 +1,4 @@
+"""Build Website nodes with the 7 lexical features and label tiers."""
 from __future__ import annotations
 
 from typing import Any
@@ -8,6 +9,7 @@ from ..builder_common import SOURCE_ROOT, clean_value, domain_features, maybe_ad
 
 
 def infer_bucket(row: dict[str, str]) -> str:
+    """Infer bucket."""
     sample_bucket = clean_value(row.get("sample_bucket"))
     sample_type = clean_value(row.get("sample_type"))
     sample_tier = clean_value(row.get("sample_tier"))
@@ -25,6 +27,7 @@ def infer_bucket(row: dict[str, str]) -> str:
 
 
 def bucket_priority(bucket: str, tier: str) -> int:
+    """Bucket priority."""
     combined = f"{bucket} {tier}".lower()
     if "illegal_confirmed_official_cross_verified" in combined:
         return 110
@@ -40,6 +43,7 @@ def bucket_priority(bucket: str, tier: str) -> int:
 
 
 def dataset_priority(dataset: str) -> int:
+    """Dataset priority."""
     order = {
         "region_expansion_site_profile": 50,
         "phase1_site_profile": 40,
@@ -52,6 +56,7 @@ def dataset_priority(dataset: str) -> int:
 
 
 def _append_site_profile(frames: list[pd.DataFrame], path, dataset: str) -> None:
+    """Append site profile."""
     df = read_csv(path)
     if df.empty:
         return
@@ -80,6 +85,7 @@ def _append_site_profile(frames: list[pd.DataFrame], path, dataset: str) -> None
 
 
 def _append_catalog(frames: list[pd.DataFrame], path, dataset: str) -> None:
+    """Append catalog."""
     df = read_csv(path)
     if df.empty:
         return
@@ -108,6 +114,7 @@ def _append_catalog(frames: list[pd.DataFrame], path, dataset: str) -> None:
 
 
 def load_site_rows() -> pd.DataFrame:
+    """Load site rows."""
     frames: list[pd.DataFrame] = []
     _append_site_profile(frames, SOURCE_ROOT / "phase1" / "core" / "site_profile.csv", "phase1_site_profile")
     _append_site_profile(
@@ -177,6 +184,7 @@ def build_website_nodes(
     zscore_epsilon: float,
     drop_all_zero_columns: bool,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict[str, str], dict[str, str], dict[str, Any]]:
+    """Build website nodes."""
     records: list[dict[str, Any]] = []
     duplicate_rows: list[dict[str, Any]] = []
     source_to_website: dict[str, str] = {}

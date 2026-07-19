@@ -1,3 +1,4 @@
+"""Train a single configuration; shared by the sweep entry points."""
 from __future__ import annotations
 
 import argparse
@@ -42,7 +43,9 @@ from src.train.utils import (
 
 
 class WebsiteMLP(torch.nn.Module):
+    """Website M L P (PyTorch module)."""
     def __init__(self, input_dim: int, hidden_dims: list[int], dropout: float) -> None:
+        """Initialise the instance."""
         super().__init__()
         layers: list[torch.nn.Module] = []
         prev_dim = input_dim
@@ -59,10 +62,12 @@ class WebsiteMLP(torch.nn.Module):
         self.network = torch.nn.Sequential(*layers)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
+        """Run the forward pass."""
         return self.network(features)
 
 
 def feature_columns(bundle: GraphBundle) -> list[str]:
+    """Feature columns."""
     return list(bundle.feature_schema["Website"]["feature_columns"])
 
 
@@ -70,6 +75,7 @@ def extract_tabular_arrays(
     split_frame: pd.DataFrame,
     feature_names: list[str],
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Extract tabular arrays."""
     features = split_frame[feature_names].to_numpy(dtype=np.float32)
     labels = split_frame["label"].to_numpy(dtype=np.int64)
     return features, labels
@@ -80,6 +86,7 @@ def evaluate_split_predictions(
     probabilities: dict[int, float],
     threshold: float,
 ) -> tuple[dict[str, float], pd.DataFrame]:
+    """Evaluate split predictions."""
     prediction_frame = build_prediction_frame(
         split_frame=split_frame,
         probabilities=probabilities,
@@ -111,6 +118,7 @@ def run_logistic_regression(
     seed: int | None = None,
     fold: int | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run logistic regression."""
     feature_names = feature_columns(bundle)
     train_frame = split_frame[split_frame["split"] == "train"].copy()
     val_frame = split_frame[split_frame["split"] == "val"].copy()
@@ -146,6 +154,7 @@ def run_mlp(
     model_name: str,
     seed: int,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run mlp."""
     set_random_seed(seed)
     config = bundle.config["model_defaults"]
     device = resolve_device(bundle.config)
@@ -226,6 +235,7 @@ def run_mlp(
 
 
 def build_full_label_vector(bundle: GraphBundle, task_frame: pd.DataFrame) -> torch.Tensor:
+    """Build full label vector."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in task_frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -239,6 +249,7 @@ def run_hetero_gnn(
     model_name: str,
     seed: int,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run hetero gnn."""
     set_random_seed(seed)
     config = bundle.config["model_defaults"]
     device = resolve_device(bundle.config)
@@ -338,6 +349,7 @@ def run_single_model(
     seed: int | None = None,
     fold: int | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run single model."""
     if model_name == "logistic_regression":
         metrics, predictions, history = run_logistic_regression(bundle, split_frame, model_name, seed, fold)
     elif model_name == "mlp":
@@ -376,6 +388,7 @@ def save_run_outputs(
     seed: int | None = None,
     fold: int | None = None,
 ) -> None:
+    """Save run outputs."""
     suffix_parts = [task_name, model_name]
     if seed is not None:
         suffix_parts.append(f"seed{seed}")
@@ -406,6 +419,7 @@ def save_run_outputs(
 
 
 def run_pooled_primary(bundle: GraphBundle, smoke_test: bool, models: list[str]) -> None:
+    """Run pooled primary."""
     task_frame = build_primary_task_frame(bundle)
     seeds = list(bundle.config["seeds"])
     if smoke_test:
@@ -461,6 +475,7 @@ def run_pooled_primary(bundle: GraphBundle, smoke_test: bool, models: list[str])
 
 
 def run_same_region_sensitivity(bundle: GraphBundle, smoke_test: bool, models: list[str]) -> None:
+    """Run same region sensitivity."""
     jurisdictions = list(bundle.config["tasks"]["same_region_jurisdictions"])
     if smoke_test:
         jurisdictions = jurisdictions[:1]
@@ -529,6 +544,7 @@ def run_same_region_sensitivity(bundle: GraphBundle, smoke_test: bool, models: l
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 4 pooled and same-region baseline experiments.")
     parser.add_argument(
         "--config",
@@ -558,6 +574,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
 

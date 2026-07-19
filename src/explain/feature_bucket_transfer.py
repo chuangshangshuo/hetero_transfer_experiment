@@ -1,3 +1,4 @@
+"""Feature-bucket ablation: quantify per-bucket contribution to transfer metrics."""
 from __future__ import annotations
 
 import argparse
@@ -43,6 +44,7 @@ REVERSE_RELATIONS = {
 
 
 def redirect_output_root(bundle: GraphBundle, root_name: str) -> None:
+    """Redirect output root."""
     workspace = Path(bundle.config["workspace_root"])
     for key in list(bundle.output_paths.keys()):
         subdir = key if key != "root" else ""
@@ -53,10 +55,12 @@ def redirect_output_root(bundle: GraphBundle, root_name: str) -> None:
 
 
 def edge_removed_slug(edge_removed: str) -> str:
+    """Edge removed slug."""
     return "full" if edge_removed == "none" else f"minus_{edge_removed}"
 
 
 def apply_edge_ablation(graph_data: Any, edge_removed: str) -> Any:
+    """Apply edge ablation."""
     data = copy.deepcopy(graph_data.cpu())
     if edge_removed == "none":
         return data
@@ -76,6 +80,7 @@ def apply_edge_ablation(graph_data: Any, edge_removed: str) -> Any:
 
 
 def load_week7_split_or_build(bundle: GraphBundle, transfer_id: str, seed: int) -> tuple[pd.DataFrame, Path]:
+    """Load week7 split or build."""
     workspace = Path(bundle.config["workspace_root"])
     week7_path = workspace / "output" / "week7" / "splits" / f"{transfer_id}__seed{seed}.csv"
     if week7_path.exists():
@@ -91,6 +96,7 @@ def run_one_edge_ablation(
     seed: int,
     smoke_test: bool,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
+    """Run one edge ablation."""
     split_frame, split_path = load_week7_split_or_build(bundle, transfer_id, seed)
     encoder_state, encoder_checkpoint = load_encoder_state(bundle, seed)
     graph_data = apply_edge_ablation(bundle.graph_data, edge_removed)
@@ -142,6 +148,7 @@ def run_one_edge_ablation(
 
 
 def summarize_e1(bundle: GraphBundle, raw: pd.DataFrame) -> pd.DataFrame:
+    """Summarise E1."""
     if raw.empty:
         return pd.DataFrame()
     B = int(bundle.config["E1_edge_ablation"].get("paired_bootstrap_B", 1000))
@@ -185,6 +192,7 @@ def summarize_e1(bundle: GraphBundle, raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_e1_heatmap(summary: pd.DataFrame, output_path: Path) -> None:
+    """Plot E1 heatmap."""
     if summary.empty:
         return
     pivot = summary.pivot(index="transfer_id", columns="edge_removed", values="effect_mean")
@@ -215,6 +223,7 @@ def run_e1(
     edge_filter: str | None,
     seed_filter: int | None,
 ) -> None:
+    """Run E1."""
     if smoke_test:
         redirect_output_root(bundle, "week8_smoke")
     transfers = list(bundle.config["E1_edge_ablation"]["transfers"])
@@ -256,6 +265,7 @@ def run_e1(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 8 E1 edge-channel ablation.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -266,6 +276,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     run_e1(

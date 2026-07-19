@@ -1,3 +1,4 @@
+"""Week-10 final family hard-negative summary."""
 from __future__ import annotations
 
 import sys
@@ -14,6 +15,7 @@ from analysis.week10_common import DEFAULT_CONFIG, ensure_output_dirs, input_pat
 
 
 def build_hard_negative_final(config: dict) -> pd.DataFrame:
+    """Build hard negative final."""
     summary = read_input(config, "week9", "hard_negative_summary")
     raw = read_input(config, "week9", "hard_negative_raw")
     if summary.empty:
@@ -47,6 +49,7 @@ def build_hard_negative_final(config: dict) -> pd.DataFrame:
 
 
 def plot_hard_negative(frame: pd.DataFrame, output: Path) -> None:
+    """Plot hard negative."""
     if frame.empty:
         return
     fig, axis = plt.subplots(figsize=(8.5, 4.6))
@@ -68,6 +71,7 @@ def plot_hard_negative(frame: pd.DataFrame, output: Path) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     frame = build_hard_negative_final(config)

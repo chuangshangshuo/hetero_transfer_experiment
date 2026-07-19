@@ -1,3 +1,4 @@
+"""Dual-head module adding a family-level SupCon projection next to the binary head."""
 from __future__ import annotations
 
 import torch
@@ -9,6 +10,7 @@ class FamilyMetricHead(nn.Module):
     """Projection head for family-aware supervised contrastive calibration."""
 
     def __init__(self, embed_dim: int = 128, projection_dim: int = 32, hidden_dim: int = 64) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.proj = nn.Sequential(
             nn.Linear(embed_dim, hidden_dim),
@@ -17,6 +19,7 @@ class FamilyMetricHead(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run the forward pass."""
         return F.normalize(self.proj(x), dim=-1)
 
 
@@ -24,6 +27,7 @@ class FamilyDualHead(nn.Module):
     """Binary illegal/licensed head plus an independent family metric head."""
 
     def __init__(self, embed_dim: int = 128, projection_dim: int = 32, hidden_dim: int = 64) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.family_head = FamilyMetricHead(embed_dim, projection_dim, hidden_dim)
         self.binary_head = nn.Sequential(
@@ -33,6 +37,7 @@ class FamilyDualHead(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Run the forward pass."""
         return self.binary_head(x), self.family_head(x)
 
 

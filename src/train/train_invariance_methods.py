@@ -1,3 +1,4 @@
+"""Week-11 P2: IRM and EERM comparison runs on the transfer scenarios."""
 from __future__ import annotations
 
 import argparse
@@ -35,11 +36,13 @@ from src.transfer.irm_penalty import cosine_warmup_lambda, irm_loss_per_env
 
 
 def load_config(path: Path) -> dict[str, Any]:
+    """Load config."""
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def ensure_output_dirs(config: dict[str, Any]) -> dict[str, Path]:
+    """Ensure output directories."""
     root = Path(config["workspace_root"])
     paths = {name: root / rel for name, rel in config["output"].items()}
     for path in paths.values():
@@ -48,6 +51,7 @@ def ensure_output_dirs(config: dict[str, Any]) -> dict[str, Path]:
 
 
 def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.device) -> torch.Tensor:
+    """Index tensor."""
     return torch.tensor(
         split_frame.loc[split_frame["split"] == split_name, "graph_node_index"].to_numpy(dtype=np.int64),
         dtype=torch.long,
@@ -61,6 +65,7 @@ def build_real_env_indices(
     min_env_samples: int,
     require_two_classes: bool,
 ) -> dict[str, torch.Tensor]:
+    """Build real environment indices."""
     envs: dict[str, torch.Tensor] = {}
     source_train = split_frame[split_frame["split"] == "source_train"].copy()
     for env, part in source_train.groupby("jurisdiction"):
@@ -75,6 +80,7 @@ def build_real_env_indices(
 
 
 def compute_initial_embeddings(model, data, metapath_adjacency) -> np.ndarray:
+    """Compute initial embeddings."""
     model.eval()
     with torch.no_grad():
         _, fused, _ = model(data, metapath_adjacency)
@@ -92,6 +98,7 @@ def run_invariance_method(
     eerm_k: int | None = None,
     smoke_test: bool = False,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run invariance method."""
     started = time.time()
     set_random_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -248,6 +255,7 @@ def run_invariance_method(
 
 
 def plot_irm_convergence(output_paths: dict[str, Path]) -> None:
+    """Plot IRM convergence."""
     histories = sorted(output_paths["logs"].glob("P2_irm_*_history.csv"))
     if not histories:
         return
@@ -267,6 +275,7 @@ def plot_irm_convergence(output_paths: dict[str, Path]) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Week 11 P2 IRM/EERM method comparison.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week11.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -274,6 +283,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     config = load_config(Path(args.config))
     output_paths = ensure_output_dirs(config)

@@ -1,3 +1,4 @@
+"""Week-11 P1: dual-head family metric learning under leave-one-family-out."""
 from __future__ import annotations
 
 import argparse
@@ -29,11 +30,13 @@ from src.train.utils import build_primary_task_frame, load_graph_bundle, set_ran
 
 
 def load_week11_config(path: Path) -> dict[str, Any]:
+    """Load week11 config."""
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def ensure_week11_dirs(config: dict[str, Any]) -> dict[str, Path]:
+    """Ensure week11 directories."""
     root = Path(config["workspace_root"])
     paths = {name: root / rel for name, rel in config["output"].items()}
     for path in paths.values():
@@ -42,6 +45,7 @@ def ensure_week11_dirs(config: dict[str, Any]) -> dict[str, Path]:
 
 
 def load_frozen_embeddings(bundle, seed: int) -> tuple[np.ndarray, str]:
+    """Load frozen embeddings."""
     encoder_state, checkpoint = load_encoder_state(bundle, seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = make_heco_model(bundle).to(device)
@@ -51,6 +55,7 @@ def load_frozen_embeddings(bundle, seed: int) -> tuple[np.ndarray, str]:
 
 
 def build_family_frame(bundle, config: dict[str, Any]) -> pd.DataFrame:
+    """Build family frame."""
     root = Path(config["workspace_root"])
     family_path = root / config["inputs"]["week85_family_assignments"]
     family = pd.read_csv(family_path)
@@ -73,6 +78,7 @@ def build_family_frame(bundle, config: dict[str, Any]) -> pd.DataFrame:
 
 
 def eligible_dk_families(frame: pd.DataFrame, min_size: int) -> list[str]:
+    """Eligible dk families."""
     dk = frame[
         frame["jurisdiction"].eq("Denmark")
         & frame["p1_family_id"].notna()
@@ -89,6 +95,7 @@ def prepare_tensors(
     shuffle_family_labels: bool,
     seed: int,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, pd.DataFrame, dict[str, int]]:
+    """Prepare tensors."""
     train = frame[
         frame["sample_tier"].isin(
             [
@@ -125,6 +132,7 @@ def train_dual_head(
     base_cfg: dict[str, Any],
     seed: int,
 ) -> tuple[FamilyDualHead, pd.DataFrame]:
+    """Train dual head."""
     set_random_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     x = x.to(device)
@@ -187,6 +195,7 @@ def projection_scores(
     candidate_frame: pd.DataFrame,
     score_mode: str,
 ) -> np.ndarray:
+    """Projection scores."""
     device = next(model.parameters()).device
     x_all = torch.tensor(embeddings, dtype=torch.float32, device=device)
     model.eval()
@@ -224,6 +233,7 @@ def evaluate_fold(
     seed: int,
     score_mode: str,
 ) -> dict[str, Any]:
+    """Evaluate fold."""
     positives = frame[frame["p1_family_id"].astype(str).eq(heldout_family)].copy()
     negative_pool = frame[
         frame["jurisdiction"].eq("Denmark")
@@ -264,6 +274,7 @@ def run_fold(
     output_paths: dict[str, Path],
     run_prefix: str,
 ) -> dict[str, Any]:
+    """Run fold."""
     started = time.time()
     x, y, fam, train_frame, family_to_int = prepare_tensors(
         frame,
@@ -313,6 +324,7 @@ def build_centroid_distances(
     embeddings_by_seed: dict[int, np.ndarray],
     families: list[str],
 ) -> pd.DataFrame:
+    """Build centroid distances."""
     rows = []
     for seed, embeddings in embeddings_by_seed.items():
         for i, fam_a in enumerate(families):
@@ -338,6 +350,7 @@ def build_centroid_distances(
 
 
 def plot_family_tsne(frame: pd.DataFrame, embeddings: np.ndarray, families: list[str], output_path: Path) -> None:
+    """Plot family tsne."""
     family_frame = frame[frame["p1_family_id"].astype(str).isin(families)].copy()
     x = embeddings[family_frame["graph_node_index"].to_numpy(dtype=int)]
     perplexity = max(2, min(10, len(family_frame) // 3))
@@ -358,6 +371,7 @@ def plot_family_tsne(frame: pd.DataFrame, embeddings: np.ndarray, families: list
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Week 11 P1 family metric head.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week11.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -365,6 +379,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     config = load_week11_config(Path(args.config))
     output_paths = ensure_week11_dirs(config)

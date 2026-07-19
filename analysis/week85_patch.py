@@ -1,3 +1,4 @@
+"""Week-8.5 patch: redo family LOFO with expanded assignments."""
 from __future__ import annotations
 
 import math
@@ -23,6 +24,7 @@ from src.transfer.transferability_analysis import compute_h_divergence, compute_
 
 
 def valid_source_regions(task_frame: pd.DataFrame, min_per_class: int = 2) -> list[str]:
+    """Valid source regions."""
     out = []
     for region, part in task_frame.groupby("jurisdiction"):
         counts = part["label"].value_counts()
@@ -32,6 +34,7 @@ def valid_source_regions(task_frame: pd.DataFrame, min_per_class: int = 2) -> li
 
 
 def target_regions(task_frame: pd.DataFrame, min_rows: int = 2) -> list[str]:
+    """Target regions."""
     out = []
     for region, part in task_frame.groupby("jurisdiction"):
         if len(part) >= min_rows:
@@ -40,6 +43,7 @@ def target_regions(task_frame: pd.DataFrame, min_rows: int = 2) -> list[str]:
 
 
 def split_source(source: pd.DataFrame, seed: int, config: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Split source."""
     grouped = add_transfer_groups(source.reset_index(drop=True), list(config["splits"]["transfer"]["group_columns"]))
     train_idx, val_idx = best_group_split(
         grouped,
@@ -52,6 +56,7 @@ def split_source(source: pd.DataFrame, seed: int, config: dict[str, Any]) -> tup
 
 
 def target_primary_metric(y_true: np.ndarray, y_score: np.ndarray, threshold: float) -> tuple[str, float, dict[str, float]]:
+    """Target primary metric."""
     metrics = evaluate_binary(y_true, y_score, threshold)
     unique = np.unique(y_true)
     if unique.size == 2:
@@ -64,6 +69,7 @@ def target_primary_metric(y_true: np.ndarray, y_score: np.ndarray, threshold: fl
 
 
 def run_e2_w85(config_path: Path) -> pd.DataFrame:
+    """Run E2 w85."""
     bundle = load_graph_bundle(config_path)
     redirect_output_root(bundle, "week85")
     task_frame = build_primary_task_frame(bundle)
@@ -150,6 +156,7 @@ def run_e2_w85(config_path: Path) -> pd.DataFrame:
 
 
 def plot_e2_w85(frame: pd.DataFrame, output_path: Path) -> None:
+    """Plot E2 w85."""
     if frame.empty:
         return
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -167,6 +174,7 @@ def plot_e2_w85(frame: pd.DataFrame, output_path: Path) -> None:
 
 
 def safe_float(value: Any) -> float:
+    """Safe float."""
     try:
         out = float(value)
     except Exception:
@@ -175,6 +183,7 @@ def safe_float(value: Any) -> float:
 
 
 def build_w85_acceptance(config_path: Path) -> pd.DataFrame:
+    """Build w85 acceptance."""
     bundle = load_graph_bundle(config_path)
     redirect_output_root(bundle, "week85")
     rows: list[dict[str, Any]] = []
@@ -338,6 +347,7 @@ def build_w85_acceptance(config_path: Path) -> pd.DataFrame:
 
 
 def write_w85_draft(bundle: Any, audit: pd.DataFrame) -> None:
+    """Write w85 draft."""
     out = ROOT / "paper" / "draft" / "sec4_4_week85_patch.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     counts = audit["status"].value_counts().to_dict()
@@ -372,6 +382,7 @@ def write_w85_draft(bundle: Any, audit: pd.DataFrame) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config_path = ROOT / "configs" / "week8.yaml"
     run_e2_w85(config_path)
     audit = build_w85_acceptance(config_path)

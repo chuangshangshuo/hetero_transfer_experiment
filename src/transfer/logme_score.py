@@ -1,9 +1,11 @@
+"""Compact LogME transferability score (Bayesian evidence maximisation)."""
 from __future__ import annotations
 
 import numpy as np
 
 
 def _as_2d_float(features: np.ndarray) -> np.ndarray:
+    """Validate and cast the feature matrix to a 2-D float64 array."""
     array = np.asarray(features, dtype=np.float64)
     if array.ndim != 2:
         raise ValueError(f"features must be 2D, got shape {array.shape}")
@@ -11,6 +13,7 @@ def _as_2d_float(features: np.ndarray) -> np.ndarray:
 
 
 def _max_evidence(u: np.ndarray, singular_values: np.ndarray, y: np.ndarray, max_iter: int = 50) -> float:
+    """Maximise the Bayesian evidence (alpha/beta iteration) for one one-vs-rest target."""
     n = y.shape[0]
     rank = singular_values.shape[0]
     sigma2 = np.square(singular_values)

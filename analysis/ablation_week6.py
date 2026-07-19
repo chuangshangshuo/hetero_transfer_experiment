@@ -1,3 +1,4 @@
+"""Week-6 head/backbone ablation aggregation."""
 from __future__ import annotations
 
 import sys
@@ -14,6 +15,7 @@ from src.train.utils import ensure_directory, save_dataframe
 
 
 def load_week4(model_name: str) -> dict[str, float | str]:
+    """Load week4."""
     group_aware_path = ROOT / "output" / "week4" / "metrics" / "pooled_primary_group_aware_reaggregated_summary.csv"
     if group_aware_path.exists():
         summary = pd.read_csv(group_aware_path)
@@ -32,6 +34,7 @@ def load_week4(model_name: str) -> dict[str, float | str]:
 
 
 def load_week5(model_name: str, temperature: float) -> dict[str, float | str]:
+    """Load week5."""
     raw = pd.read_csv(ROOT / "output" / "week5" / "metrics" / "heco_probe_raw_runs.csv")
     row = raw[(raw["model"] == model_name) & (raw["temperature"] == temperature)].iloc[0]
     return {
@@ -42,6 +45,7 @@ def load_week5(model_name: str, temperature: float) -> dict[str, float | str]:
 
 
 def load_week6_disc_lr() -> dict[str, float | str]:
+    """Load week6 disc lr."""
     path = ROOT / "output" / "week6" / "metrics" / "pooled_primary_finetune_summary.csv"
     summary = pd.read_csv(path)
     row = summary[
@@ -56,6 +60,7 @@ def load_week6_disc_lr() -> dict[str, float | str]:
 
 
 def load_week6_uniform_lr() -> dict[str, float | str]:
+    """Load week6 uniform lr."""
     path = ROOT / "output" / "week6" / "metrics" / "pooled_primary_finetune_uniform_lr_summary.csv"
     if not path.exists():
         return {
@@ -76,6 +81,7 @@ def load_week6_uniform_lr() -> dict[str, float | str]:
 
 
 def load_cross_verified() -> dict[str, float | str]:
+    """Load cross verified."""
     path = ROOT / "output" / "week6" / "metrics" / "cross_verified_pooled_eval.csv"
     if not path.exists():
         return {"auc_mean": float("nan"), "auc_std": float("nan"), "source": "Week 6 RQ1 eval pending"}
@@ -89,6 +95,7 @@ def load_cross_verified() -> dict[str, float | str]:
 
 
 def build_ablation_table() -> pd.DataFrame:
+    """Build ablation table."""
     rows = [
         {
             "row": 1,
@@ -136,6 +143,7 @@ def build_ablation_table() -> pd.DataFrame:
 
 
 def plot_fig4(table: pd.DataFrame) -> None:
+    """Plot fig4."""
     fig_rows = table[table["row"] <= 8].copy()
     output_path = ROOT / "figs" / "fig4_pooled_auc.pdf"
     ensure_directory(output_path.parent)
@@ -170,6 +178,7 @@ def plot_fig4(table: pd.DataFrame) -> None:
 
 
 def write_paper_draft(table: pd.DataFrame) -> None:
+    """Write paper draft."""
     week6 = table[table["row"] == 7].iloc[0]
     uniform = table[table["row"] == 8].iloc[0]
     cv = table[table["row"] == 9].iloc[0]
@@ -194,6 +203,7 @@ Table 2 should use `output/week6/metrics/ablation_table.csv` as its source, and 
 
 
 def write_acceptance_audit(table: pd.DataFrame) -> None:
+    """Write acceptance audit."""
     thresholds = {
         "pooled_auc_mean_min": 0.95,
         "pooled_auc_std_max": 0.04,
@@ -245,6 +255,7 @@ def write_acceptance_audit(table: pd.DataFrame) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     output_dir = ROOT / "output" / "week6" / "metrics"
     ensure_directory(output_dir)
     table = build_ablation_table()

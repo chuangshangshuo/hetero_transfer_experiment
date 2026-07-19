@@ -1,3 +1,4 @@
+"""Paired bootstrap p-value and Holm-Bonferroni correction used by the paper."""
 from __future__ import annotations
 
 import numpy as np

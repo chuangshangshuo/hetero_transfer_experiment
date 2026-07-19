@@ -1,3 +1,4 @@
+"""Week-9 family hard-negative audit aggregation."""
 from __future__ import annotations
 
 import sys
@@ -17,6 +18,7 @@ OUT = ROOT / "output" / "week9"
 
 
 def main() -> None:
+    """Command-line entry point."""
     source = ROOT / "output" / "week85" / "metrics" / "E3_w85_lofo_raw.csv"
     if not source.exists():
         raise FileNotFoundError(source)

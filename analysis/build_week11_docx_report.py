@@ -39,6 +39,7 @@ WARN = RGBColor(156, 101, 0)
 
 
 def set_run_font(run, font_name: str = "Microsoft YaHei", size: Pt | None = None) -> None:
+    """Set run font."""
     run.font.name = font_name
     if size is not None:
         run.font.size = size
@@ -53,6 +54,7 @@ def set_run_font(run, font_name: str = "Microsoft YaHei", size: Pt | None = None
 
 
 def set_cell_shading(cell, fill: str) -> None:
+    """Set cell shading."""
     tc_pr = cell._tc.get_or_add_tcPr()
     shd = tc_pr.find(qn("w:shd"))
     if shd is None:
@@ -62,6 +64,7 @@ def set_cell_shading(cell, fill: str) -> None:
 
 
 def set_cell_text(cell, text: str, bold: bool = False, color: RGBColor | None = None, size: Pt = Pt(8)) -> None:
+    """Set cell text."""
     cell.text = ""
     paragraph = cell.paragraphs[0]
     paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -74,6 +77,7 @@ def set_cell_text(cell, text: str, bold: bool = False, color: RGBColor | None = 
 
 
 def configure_document(document: Document) -> None:
+    """Configure document."""
     section = document.sections[0]
     section.page_width = Cm(21)
     section.page_height = Cm(29.7)
@@ -107,6 +111,7 @@ def configure_document(document: Document) -> None:
 
 
 def prepare_package(zip_path: Path, package_dir: Path) -> Path:
+    """Prepare package."""
     md_path = package_dir / "Week11_Final_Experiment_Report.md"
     if md_path.exists():
         return md_path
@@ -121,6 +126,7 @@ def prepare_package(zip_path: Path, package_dir: Path) -> Path:
 
 
 def read_csv_rows(path: Path) -> list[dict[str, str]]:
+    """Read CSV rows."""
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8-sig", newline="") as fh:
@@ -128,6 +134,7 @@ def read_csv_rows(path: Path) -> list[dict[str, str]]:
 
 
 def add_inline_runs(paragraph, text: str, default_bold: bool = False) -> None:
+    """Add inline runs."""
     token_re = re.compile(r"(`[^`]+`|\*\*.*?\*\*)")
     cursor = 0
     for match in token_re.finditer(text):
@@ -160,6 +167,7 @@ def add_inline_runs(paragraph, text: str, default_bold: bool = False) -> None:
 
 
 def split_table_row(line: str) -> list[str]:
+    """Split table row."""
     line = line.strip()
     if line.startswith("|"):
         line = line[1:]
@@ -169,11 +177,13 @@ def split_table_row(line: str) -> list[str]:
 
 
 def is_table_separator(line: str) -> bool:
+    """Return True if table separator."""
     cells = split_table_row(line)
     return bool(cells) and all(re.fullmatch(r":?-{3,}:?", c.strip()) for c in cells)
 
 
 def add_markdown_table(document: Document, table_lines: list[str]) -> None:
+    """Add markdown table."""
     if len(table_lines) < 2:
         return
     rows = [split_table_row(line) for line in table_lines if not is_table_separator(line)]
@@ -198,6 +208,7 @@ def add_markdown_table(document: Document, table_lines: list[str]) -> None:
 
 
 def resolve_image(package_dir: Path, image_ref: str) -> Path | None:
+    """Resolve image."""
     candidates = [
         package_dir / image_ref,
         package_dir / Path(image_ref).name,
@@ -211,6 +222,7 @@ def resolve_image(package_dir: Path, image_ref: str) -> Path | None:
 
 
 def add_image(document: Document, package_dir: Path, alt: str, image_ref: str) -> None:
+    """Add image."""
     image_path = resolve_image(package_dir, image_ref)
     if not image_path:
         paragraph = document.add_paragraph(style="Intense Quote")
@@ -229,6 +241,7 @@ def add_image(document: Document, package_dir: Path, alt: str, image_ref: str) -
 
 
 def add_callout(document: Document, title: str, body: str, fill: str = "EAF4EA") -> None:
+    """Add callout."""
     table = document.add_table(rows=1, cols=1)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     cell = table.cell(0, 0)
@@ -244,6 +257,7 @@ def add_callout(document: Document, title: str, body: str, fill: str = "EAF4EA")
 
 
 def add_cover(document: Document, title: str, zip_path: Path, output_path: Path) -> None:
+    """Add cover."""
     score_rows = read_csv_rows(ROOT / "output" / "week11" / "metrics" / "week11_score_estimate.csv")
     audit_rows = read_csv_rows(ROOT / "output" / "week11" / "metrics" / "week11_acceptance_audit.csv")
     pass_count = sum(1 for row in audit_rows if row.get("status") == "pass")
@@ -291,6 +305,7 @@ def add_cover(document: Document, title: str, zip_path: Path, output_path: Path)
 
 
 def add_quality_appendix(document: Document) -> None:
+    """Add quality appendix."""
     document.add_heading("附录 C: DOCX 整合一致性校验", level=2)
 
     patch_rows = read_csv_rows(ROOT / "output" / "week11" / "tables" / "table_week11_patch_summary.csv")
@@ -344,6 +359,7 @@ def add_quality_appendix(document: Document) -> None:
 
 
 def convert_markdown(document: Document, md_path: Path, package_dir: Path) -> str:
+    """Convert markdown."""
     lines = md_path.read_text(encoding="utf-8-sig").splitlines()
     title = "Week11 Final Experiment Report"
     idx = 0
@@ -352,6 +368,7 @@ def convert_markdown(document: Document, md_path: Path, package_dir: Path) -> st
     table_lines: list[str] = []
 
     def flush_table() -> None:
+        """Flush table."""
         nonlocal table_lines
         if table_lines:
             add_markdown_table(document, table_lines)
@@ -460,6 +477,7 @@ def convert_markdown(document: Document, md_path: Path, package_dir: Path) -> st
 
 
 def build_docx(zip_path: Path, package_dir: Path, output_path: Path) -> None:
+    """Build DOCX."""
     md_path = prepare_package(zip_path, package_dir)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -488,6 +506,7 @@ def build_docx(zip_path: Path, package_dir: Path, output_path: Path) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--zip", type=Path, default=DEFAULT_PACKAGE_ZIP)
     parser.add_argument("--package-dir", type=Path, default=DEFAULT_PACKAGE_DIR)

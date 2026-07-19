@@ -1,3 +1,4 @@
+"""Build Registrar nodes."""
 from __future__ import annotations
 
 from typing import Any
@@ -13,6 +14,7 @@ def build_registrar_nodes(
     zscore_epsilon: float,
     drop_all_zero_columns: bool,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Build registrar nodes."""
     df = registrar_nodes.copy()
     if df.empty:
         return df, {"active_feature_columns": [], "dropped_columns": [], "scalers": {}}

@@ -1,3 +1,4 @@
+"""Bridge tables revising Week-7 interpretations with Week-8 diagnostics."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,17 +49,20 @@ E5_CONDITIONS = {
 
 
 def read_csv(path: str) -> pd.DataFrame:
+    """Read CSV."""
     full = ROOT / path
     return pd.read_csv(full) if full.exists() else pd.DataFrame()
 
 
 def write_csv(frame: pd.DataFrame, path: str) -> None:
+    """Write CSV."""
     full = ROOT / path
     full.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(full, index=False, encoding="utf-8")
 
 
 def first_float(frame: pd.DataFrame, column: str) -> float | None:
+    """First float."""
     if frame.empty or column not in frame.columns:
         return None
     value = frame[column].iloc[0]
@@ -71,12 +75,14 @@ def first_float(frame: pd.DataFrame, column: str) -> float | None:
 
 
 def source_only_row(method_summary: pd.DataFrame, transfer_id: str) -> pd.DataFrame:
+    """Source only row."""
     return method_summary[
         (method_summary["transfer_id"] == transfer_id) & (method_summary["method"] == "source_only")
     ]
 
 
 def best_week7_method(method_summary: pd.DataFrame, transfer_id: str) -> tuple[str | None, float | None]:
+    """Best week7 method."""
     subset = method_summary[method_summary["transfer_id"] == transfer_id].copy()
     if subset.empty:
         return None, None
@@ -91,6 +97,7 @@ def best_week7_method(method_summary: pd.DataFrame, transfer_id: str) -> tuple[s
 
 
 def build_week7_tables() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Build week7 tables."""
     method_summary = read_csv("output/week7/metrics/transfer_method_summary.csv")
     fewshot = read_csv("output/week9/metrics/fewshot_acceptance_audit.csv")
 
@@ -215,6 +222,7 @@ def build_week7_tables() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
 
 def build_e3_tables() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build E3 tables."""
     original = read_csv("output/week8/metrics/E3_lofo_family_sensitivity.csv")
     w85 = read_csv("output/week85/metrics/E3_w85_lofo_summary.csv")
     licensed_vals = pd.to_numeric(original["test_roc_auc_mean"], errors="coerce") if not original.empty else pd.Series(dtype=float)
@@ -286,6 +294,7 @@ def build_e3_tables() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def e5_interpretation(transfer_id: str, condition: str, value: float | None, full_value: float | None) -> str:
+    """E5 interpretation."""
     if transfer_id == "T3_DiagnoseFrance":
         if condition == "full":
             return "High T3 performance baseline; requires diagnostic attribution."
@@ -304,6 +313,7 @@ def e5_interpretation(transfer_id: str, condition: str, value: float | None, ful
 
 
 def build_e5_table() -> pd.DataFrame:
+    """Build E5 table."""
     e5 = read_csv("output/week8_patch/metrics/E5_structure_vs_lexical_summary.csv")
     rows: list[dict[str, Any]] = []
     for transfer_id, group in e5.groupby("transfer_id"):
@@ -330,6 +340,7 @@ def build_e5_table() -> pd.DataFrame:
 
 
 def build_week8_rollup() -> pd.DataFrame:
+    """Build week8 rollup."""
     return pd.DataFrame(
         [
             {
@@ -382,6 +393,7 @@ def build_week8_rollup() -> pd.DataFrame:
 
 
 def main() -> None:
+    """Command-line entry point."""
     week7_summary, week7_taxonomy, bridge = build_week7_tables()
     e3_comparison, e3_hard = build_e3_tables()
     e5_corrected = build_e5_table()

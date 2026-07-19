@@ -1,3 +1,4 @@
+"""Build ExternalReference nodes."""
 from __future__ import annotations
 
 from typing import Any
@@ -8,6 +9,7 @@ from ..builder_common import clean_value, maybe_add_feature_column
 
 
 def build_extref_nodes(extref_nodes: pd.DataFrame, *, drop_all_zero_columns: bool) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Build extref nodes."""
     df = extref_nodes.copy()
     if df.empty:
         return df, {"active_feature_columns": [], "dropped_columns": []}

@@ -1,3 +1,4 @@
+"""Domain-adversarial training helpers (gradient reversal, lambda schedule)."""
 from __future__ import annotations
 
 import math
@@ -15,6 +16,7 @@ def lambda_schedule(
     lambda_max: float = 1.0,
     schedule: str = "cosine",
 ) -> float:
+    """Lambda schedule."""
     if warmup_epochs <= 0 or epoch >= warmup_epochs:
         return float(lambda_max)
     progress = max(0.0, min(1.0, float(epoch) / float(warmup_epochs)))
@@ -26,6 +28,7 @@ def lambda_schedule(
 
 
 class HeCoDANNClassifier(nn.Module):
+    """He Co D A N N Classifier (PyTorch module)."""
     def __init__(
         self,
         heco_encoder: HeCoModel,
@@ -33,6 +36,7 @@ class HeCoDANNClassifier(nn.Module):
         dropout: float = 0.30,
         head_type: str = "mlp_64",
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         if head_type != "mlp_64":
             raise ValueError("Week 7 DANN currently uses the mlp_64 HeCo head.")
@@ -51,12 +55,15 @@ class HeCoDANNClassifier(nn.Module):
         )
 
     def encoder_parameters(self):
+        """Encoder parameters."""
         return self.encoder.parameters()
 
     def head_parameters(self):
+        """Head parameters."""
         return self.classifier.parameters()
 
     def domain_parameters(self):
+        """Domain parameters."""
         return self.domain_discriminator.parameters()
 
     def forward(
@@ -65,6 +72,7 @@ class HeCoDANNClassifier(nn.Module):
         metapath_adjacency: dict[str, torch.Tensor],
         reverse_scale: float = 1.0,
     ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+        """Run the forward pass."""
         output = self.encoder(data, metapath_adjacency)
         class_logits = self.classifier(output.combined_embedding)
         domain_logits = self.domain_discriminator(output.combined_embedding, reverse_scale=reverse_scale)

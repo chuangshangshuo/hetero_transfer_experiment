@@ -1,3 +1,4 @@
+"""Re-aggregate Week-4 baselines under the group-aware split."""
 from __future__ import annotations
 
 import argparse
@@ -28,6 +29,7 @@ CROSS_VERIFIED_TIER = "illegal_confirmed_official_cross_verified"
 
 
 def split_audit(split_frame: pd.DataFrame, seed: int) -> pd.DataFrame:
+    """Split audit."""
     rows: list[dict[str, object]] = []
     for split_name, split_part in split_frame.groupby("split"):
         row = {
@@ -71,6 +73,7 @@ def reaggregate_model_seed(
     model_name: str,
     seed: int,
 ) -> tuple[dict[str, object], pd.DataFrame]:
+    """Reaggregate model seed."""
     score_columns = ["node_id", "graph_node_index", "split", "pred_prob_illegal"]
     scored = prediction_frame[score_columns].copy()
     scored = scored.rename(columns={"split": "original_prediction_split"})
@@ -116,6 +119,7 @@ def reaggregate_model_seed(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="Regenerate pooled primary group-aware splits and reaggregate existing Week 4 prediction scores."
     )
@@ -128,6 +132,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     task_frame = build_primary_task_frame(bundle)

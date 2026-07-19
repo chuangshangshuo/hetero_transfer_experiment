@@ -1,3 +1,4 @@
+"""Week-5 HeCo contrastive pre-training entry point (temperature grid, checkpoints)."""
 from __future__ import annotations
 
 import argparse
@@ -40,34 +41,43 @@ from src.train.utils import (
 
 
 class LinearProbe(torch.nn.Module):
+    """Linear Probe (PyTorch module)."""
     def __init__(self, input_dim: int) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.classifier = torch.nn.Linear(input_dim, 2)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
+        """Run the forward pass."""
         return self.classifier(features)
 
 
 class FineTuneClassifier(torch.nn.Module):
+    """Fine Tune Classifier (PyTorch module)."""
     def __init__(self, encoder: HeCoModel, embedding_dim: int) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.encoder = encoder
         self.classifier = torch.nn.Linear(embedding_dim, 2)
 
     def forward(self, data, metapath_adjacency: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
+        """Run the forward pass."""
         output = self.encoder(data, metapath_adjacency)
         return self.classifier(output.combined_embedding), output.combined_embedding
 
 
 def node_feature_dims(bundle: GraphBundle) -> dict[str, int]:
+    """Node feature dims."""
     return {node_type: int(bundle.graph_data[node_type].x.shape[1]) for node_type in bundle.graph_data.node_types}
 
 
 def metapath_names(config: dict[str, Any]) -> list[str]:
+    """Metapath names."""
     return list(config["heco"]["metapaths"].keys())
 
 
 def make_heco_model(bundle: GraphBundle) -> HeCoModel:
+    """Construct HeCo model."""
     config = bundle.config["heco"]
     return HeCoModel(
         node_feature_dims=node_feature_dims(bundle),
@@ -80,6 +90,7 @@ def make_heco_model(bundle: GraphBundle) -> HeCoModel:
 
 
 def build_labels(bundle: GraphBundle, task_frame: pd.DataFrame) -> torch.Tensor:
+    """Build labels."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in task_frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -92,6 +103,7 @@ def pretrain_heco(
     seed: int,
     smoke_test: bool,
 ) -> tuple[HeCoModel, pd.DataFrame, dict[str, Any]]:
+    """Pretrain HeCo."""
     set_random_seed(seed)
     device = resolve_device(bundle.config)
     graph_data = bundle.graph_data.to(device)
@@ -174,6 +186,7 @@ def get_embeddings(
     bundle: GraphBundle,
     model: HeCoModel,
 ) -> np.ndarray:
+    """Return embeddings."""
     device = resolve_device(bundle.config)
     graph_data = bundle.graph_data.to(device)
     artifacts = build_metapath_artifacts(
@@ -197,6 +210,7 @@ def evaluate_probe_predictions(
     seed: int,
     temperature: float,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
+    """Evaluate probe predictions."""
     probability_map = dict(zip(split_frame["graph_node_index"], probabilities))
     prediction_frame = build_prediction_frame(
         split_frame=split_frame,
@@ -237,6 +251,7 @@ def run_frozen_linear_probe(
     temperature: float,
     seed: int,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run frozen linear probe."""
     set_random_seed(seed)
     config = bundle.config["probe"]["frozen_linear"]
     device = resolve_device(bundle.config)
@@ -311,6 +326,7 @@ def run_full_finetune_probe(
     temperature: float,
     seed: int,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run full finetune probe."""
     set_random_seed(seed)
     config = bundle.config["probe"]["full_finetune"]
     device = resolve_device(bundle.config)
@@ -394,6 +410,7 @@ def save_probe_outputs(
     history: pd.DataFrame,
     split_frame: pd.DataFrame,
 ) -> None:
+    """Save probe outputs."""
     suffix = f"{metrics['model']}__tau{metrics['temperature']}__seed{metrics['seed']}"
     save_dataframe(predictions, bundle.output_paths["predictions"] / f"{suffix}.csv")
     save_dataframe(history, bundle.output_paths["logs"] / f"{suffix}_history.csv")
@@ -411,6 +428,7 @@ def save_probe_outputs(
 
 
 def save_embeddings(bundle: GraphBundle, embeddings: np.ndarray, temperature: float, seed: int) -> pd.DataFrame:
+    """Save embeddings."""
     metadata_frame = bundle.website_frame[
         ["graph_node_index", "node_id", "root_domain", "jurisdiction", "sample_tier", "brand", "operator_or_case"]
     ].copy()
@@ -424,6 +442,7 @@ def save_embeddings(bundle: GraphBundle, embeddings: np.ndarray, temperature: fl
 
 
 def plot_tsne(bundle: GraphBundle, embedding_frame: pd.DataFrame, temperature: float, seed: int) -> None:
+    """Plot tsne."""
     embedding_columns = [column for column in embedding_frame.columns if column.startswith("emb_")]
     embeddings = embedding_frame[embedding_columns].to_numpy(dtype=np.float32)
     tsne_config = bundle.config["visualization"]
@@ -502,6 +521,7 @@ def plot_tsne(bundle: GraphBundle, embedding_frame: pd.DataFrame, temperature: f
 
 
 def run_week5(bundle: GraphBundle, smoke_test: bool) -> None:
+    """Run week5."""
     seed = int(bundle.config["seeds"][0])
     task_frame = build_primary_task_frame(bundle)
     split_frame = make_pooled_primary_split(task_frame, seed, bundle.config)
@@ -585,6 +605,7 @@ def run_week5(bundle: GraphBundle, smoke_test: bool) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 5 HeCo contrastive pretraining and probing.")
     parser.add_argument(
         "--config",
@@ -596,6 +617,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     run_week5(bundle, smoke_test=args.smoke_test)

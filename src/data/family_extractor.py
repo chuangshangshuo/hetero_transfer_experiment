@@ -1,3 +1,4 @@
+"""Rebuild Denmark family labels from root-domain patterns and hosted_on components."""
 from __future__ import annotations
 
 import argparse
@@ -17,16 +18,19 @@ from src.train.utils import GraphBundle, build_primary_task_frame, load_graph_bu
 
 
 def _normalise_domain(value: Any) -> str:
+    """Lower-case, trim, and strip a leading 'www.' from a domain string."""
     text = str(value or "").strip().lower()
     text = re.sub(r"^www\.", "", text)
     return text
 
 
 def _compact_domain(value: str) -> str:
+    """Reduce a domain to letters only (used for hyphen/dot-insensitive matching)."""
     return re.sub(r"[^a-z]+", "", value.lower())
 
 
 def _pattern_family(root_domain: str, patterns: dict[str, list[str]]) -> tuple[str | None, str | None]:
+    """Match a root domain against family patterns (raw substring, then compact form); order-sensitive."""
     root = _normalise_domain(root_domain)
     compact = _compact_domain(root)
     for family, raw_patterns in patterns.items():
@@ -41,6 +45,7 @@ def _pattern_family(root_domain: str, patterns: dict[str, list[str]]) -> tuple[s
 
 
 def _hosted_on_components(bundle: GraphBundle, candidate_indices: set[int]) -> list[set[int]]:
+    """Connected components (size>=2) of candidate websites linked via shared hosting IPs."""
     if not candidate_indices:
         return []
     edge_key = ("Website", "hosted_on", "IP")
@@ -143,6 +148,7 @@ def extract_denmark_families(bundle: GraphBundle) -> pd.DataFrame:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Extract Week 8 Denmark family assignments.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument(
@@ -154,6 +160,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     assignments = extract_denmark_families(bundle)

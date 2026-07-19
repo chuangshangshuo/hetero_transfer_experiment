@@ -1,3 +1,4 @@
+"""Build Website->NameServer uses_ns edges."""
 from __future__ import annotations
 
 import pandas as pd
@@ -6,4 +7,5 @@ from ..builder_common import aggregate_edge_pairs
 
 
 def build_uses_ns_edges(raw_df: pd.DataFrame, node_index: dict[str, dict[str, int]]) -> pd.DataFrame:
+    """Build uses ns edges."""
     return aggregate_edge_pairs(raw_df, "uses_ns", node_index["Website"], node_index["NameServer"])

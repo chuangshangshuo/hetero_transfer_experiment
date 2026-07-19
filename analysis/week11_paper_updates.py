@@ -1,3 +1,4 @@
+"""Week-11 P5: regenerate paper-facing section drafts from metrics."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def ensure_dirs(config: dict) -> dict[str, Path]:
+    """Ensure directories."""
     root = Path(config["workspace_root"])
     paths = {name: root / rel for name, rel in config["output"].items()}
     for path in paths.values():
@@ -20,6 +22,7 @@ def ensure_dirs(config: dict) -> dict[str, Path]:
 
 
 def load_metrics(path: Path) -> str:
+    """Load metrics."""
     if not path.exists():
         return "相应 Week11 指标尚未生成，本节保留为结果占位但不替代实测。"
     frame = pd.read_csv(path)
@@ -27,6 +30,7 @@ def load_metrics(path: Path) -> str:
 
 
 def write_sections(paths: dict[str, Path]) -> None:
+    """Write sections."""
     p1_note = load_metrics(ROOT / "output" / "week11" / "metrics" / "P1_family_metric_lofo.csv")
     p2_note = load_metrics(ROOT / "output" / "week11" / "metrics" / "P2_method_comparison.csv")
     p3_note = load_metrics(ROOT / "output" / "week11" / "metrics" / "P3_full_fewshot_matrix.csv")
@@ -138,6 +142,7 @@ Week11 P3 把 RQ4 扩展到 T1_Nordic 与 T2_ON 两个 one-class/boundary target
 
 
 def plot_boundary_diagram(paths: dict[str, Path]) -> None:
+    """Plot boundary diagram."""
     labels = ["Structural\ncommonality", "Regional\nbias", "Evidence\nhierarchy", "Few-shot\ncalibration"]
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.axis("off")
@@ -163,6 +168,7 @@ def plot_boundary_diagram(paths: dict[str, Path]) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = yaml.safe_load((ROOT / "configs" / "week11.yaml").read_text(encoding="utf-8"))
     paths = ensure_dirs(config)
     write_sections(paths)

@@ -1,3 +1,4 @@
+"""RQ3: LogME transferability matrix across source-target pairs."""
 from __future__ import annotations
 
 import argparse
@@ -14,6 +15,7 @@ from src.transfer.transferability_analysis import compute_pair_scores
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Week 8 E2 LogME transferability matrix wrapper.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -21,6 +23,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     if args.smoke_test:

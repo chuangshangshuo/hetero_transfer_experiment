@@ -1,3 +1,4 @@
+"""E2 transferability metrics: LogME/H-divergence style scores vs realised AUC."""
 from __future__ import annotations
 
 import argparse
@@ -37,6 +38,7 @@ from src.transfer.logme_score import compute_logme
 
 
 def compute_h_divergence(emb_s: np.ndarray, emb_t: np.ndarray, seed: int = 42) -> float:
+    """Compute h divergence."""
     x = np.vstack([emb_s, emb_t])
     y = np.concatenate([np.zeros(len(emb_s), dtype=int), np.ones(len(emb_t), dtype=int)])
     if min(np.bincount(y)) < 3:
@@ -54,6 +56,7 @@ def compute_sliced_wasserstein(
     seed: int = 42,
     n_projections: int = 64,
 ) -> float:
+    """Compute sliced wasserstein."""
     rng = np.random.default_rng(seed)
     dim = emb_s.shape[1]
     distances = []
@@ -70,6 +73,7 @@ def compute_sliced_wasserstein(
 
 
 def valid_region_pairs(task_frame: pd.DataFrame, min_per_class: int) -> list[tuple[str, str]]:
+    """Valid region pairs."""
     regions = sorted(task_frame["jurisdiction"].dropna().unique().tolist())
     valid_regions = []
     for region in regions:
@@ -81,6 +85,7 @@ def valid_region_pairs(task_frame: pd.DataFrame, min_per_class: int) -> list[tup
 
 
 def compute_pair_scores(bundle: Any, smoke_test: bool = False) -> pd.DataFrame:
+    """Compute pair scores."""
     task_frame = build_primary_task_frame(bundle)
     min_per_class = int(bundle.config["E2_logme"].get("min_per_class_per_region", 2))
     pairs = valid_region_pairs(task_frame, min_per_class=min_per_class)
@@ -129,6 +134,7 @@ def compute_pair_scores(bundle: Any, smoke_test: bool = False) -> pd.DataFrame:
 
 
 def _safe_slug(value: str) -> str:
+    """Helper: safe slug."""
     return "".join(ch if ch.isalnum() else "_" for ch in str(value)).strip("_")
 
 
@@ -138,6 +144,7 @@ def build_single_source_transfer_split(
     target_region: str,
     seed: int,
 ) -> pd.DataFrame:
+    """Build single source transfer split."""
     primary = build_primary_task_frame(bundle)
     source = primary[primary["jurisdiction"] == source_region].copy().reset_index(drop=True)
     target = primary[primary["jurisdiction"] == target_region].copy().reset_index(drop=True)
@@ -183,6 +190,7 @@ def build_single_source_transfer_split(
 
 
 def run_extra_transfer_alignment(bundle: Any, pair_scores: pd.DataFrame, smoke_test: bool = False) -> pd.DataFrame:
+    """Run extra transfer alignment."""
     if pair_scores.empty:
         return pd.DataFrame()
     pairs = (
@@ -279,6 +287,7 @@ def run_extra_transfer_alignment(bundle: Any, pair_scores: pd.DataFrame, smoke_t
 
 
 def correlate_with_realized_auc(pair_scores: pd.DataFrame, realized: pd.DataFrame) -> pd.DataFrame:
+    """Correlate with realized AUC."""
     if realized.empty:
         return pd.DataFrame()
     aligned = pair_scores.merge(realized, on=["source_region", "target_region", "seed"], how="inner")
@@ -308,6 +317,7 @@ def correlate_with_realized_auc(pair_scores: pd.DataFrame, realized: pd.DataFram
 
 
 def plot_logme_vs_auc(aligned: pd.DataFrame, output_path: Path) -> None:
+    """Plot LogME vs AUC."""
     if aligned.empty or "target_auc" not in aligned.columns:
         return
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -323,6 +333,7 @@ def plot_logme_vs_auc(aligned: pd.DataFrame, output_path: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 8 E2 transferability scoring.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -331,6 +342,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     if args.smoke_test:

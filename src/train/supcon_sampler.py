@@ -1,3 +1,4 @@
+"""Batch sampler guaranteeing same-family positives for SupCon training."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class NWayKShotBatch:
+    """N Way K Shot Batch."""
     indices: np.ndarray
     selected_families: list[str]
     licensed_count: int

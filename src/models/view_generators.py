@@ -1,3 +1,4 @@
+"""Generate network-schema and metapath views used by HeCo pre-training."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ FORWARD_RELATION_TRIPLES: dict[str, tuple[str, str, str]] = {
 
 @dataclass
 class MetapathArtifacts:
+    """Metapath Artifacts."""
     adjacency: dict[str, torch.Tensor]
     score_matrices: dict[str, torch.Tensor]
     positive_mask: torch.Tensor
@@ -28,6 +30,7 @@ class MetapathArtifacts:
 
 
 class SchemaViewEncoder(nn.Module):
+    """Schema View Encoder (PyTorch module)."""
     def __init__(
         self,
         node_feature_dims: dict[str, int],
@@ -35,6 +38,7 @@ class SchemaViewEncoder(nn.Module):
         hidden_dim: int = 64,
         dropout: float = 0.30,
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.dropout = dropout
         self.input_linears = nn.ModuleDict(
@@ -54,6 +58,7 @@ class SchemaViewEncoder(nn.Module):
         )
 
     def forward(self, data: Any) -> torch.Tensor:
+        """Run the forward pass."""
         x_dict = {
             node_type: F.dropout(F.relu(linear(data[node_type].x.float())), p=self.dropout, training=self.training)
             for node_type, linear in self.input_linears.items()
@@ -71,6 +76,7 @@ class SchemaViewEncoder(nn.Module):
 
 
 class MetapathViewEncoder(nn.Module):
+    """Metapath View Encoder (PyTorch module)."""
     def __init__(
         self,
         website_feature_dim: int,
@@ -78,6 +84,7 @@ class MetapathViewEncoder(nn.Module):
         hidden_dim: int = 64,
         dropout: float = 0.30,
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.dropout = dropout
         self.website_linear = nn.Linear(website_feature_dim, hidden_dim)
@@ -87,6 +94,7 @@ class MetapathViewEncoder(nn.Module):
         self.output_linear = nn.Linear(hidden_dim, hidden_dim)
 
     def forward(self, website_features: torch.Tensor, metapath_adjacency: dict[str, torch.Tensor]) -> torch.Tensor:
+        """Run the forward pass."""
         base = F.dropout(F.relu(self.website_linear(website_features.float())), p=self.dropout, training=self.training)
         path_outputs: list[torch.Tensor] = []
         for metapath_name, adjacency in metapath_adjacency.items():
@@ -103,6 +111,7 @@ def _build_weighted_incidence(
     edge_type: tuple[str, str, str],
     num_websites: int,
 ) -> torch.Tensor:
+    """Build weighted incidence."""
     edge_index = data[edge_type].edge_index.detach().cpu()
     edge_weight = data[edge_type].edge_weight.detach().cpu().float()
     target_count = int(data[edge_type[2]].x.shape[0])
@@ -112,6 +121,7 @@ def _build_weighted_incidence(
 
 
 def _row_normalize_dense(matrix: torch.Tensor) -> torch.Tensor:
+    """Helper: row normalize dense."""
     matrix = matrix.clone()
     matrix.fill_diagonal_(0.0)
     row_sum = matrix.sum(dim=1, keepdim=True).clamp_min(1e-12)
@@ -119,6 +129,7 @@ def _row_normalize_dense(matrix: torch.Tensor) -> torch.Tensor:
 
 
 def _dense_to_sparse(matrix: torch.Tensor) -> torch.Tensor:
+    """Helper: dense to sparse."""
     indices = matrix.nonzero(as_tuple=False).t().contiguous()
     if indices.numel() == 0:
         indices = torch.empty((2, 0), dtype=torch.long)
@@ -134,6 +145,7 @@ def build_metapath_artifacts(
     top_k: int,
     min_metapath_support: int,
 ) -> MetapathArtifacts:
+    """Build metapath artifacts."""
     num_websites = int(data["Website"].x.shape[0])
     dense_scores: dict[str, torch.Tensor] = {}
     normalized_adjacency: dict[str, torch.Tensor] = {}

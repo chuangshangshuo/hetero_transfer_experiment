@@ -1,3 +1,4 @@
+"""Build Certificate nodes with issuer-family one-hot features."""
 from __future__ import annotations
 
 import re
@@ -9,6 +10,7 @@ from ..builder_common import clean_value, maybe_add_feature_column, normalize_te
 
 
 def _issuer_family(row: pd.Series) -> str:
+    """Helper: issuer family."""
     for col in ("tls_issuer_org", "region_tls_issuer", "tls_issuer_cn"):
         value = normalize_text_token(row.get(col, ""))
         if value:
@@ -17,6 +19,7 @@ def _issuer_family(row: pd.Series) -> str:
 
 
 def _feature_safe_name(value: str) -> str:
+    """Helper: feature safe name."""
     return re.sub(r"[^a-z0-9]+", "_", value).strip("_")
 
 
@@ -26,6 +29,7 @@ def build_cert_nodes(
     issuer_family_vocab_size: int,
     drop_all_zero_columns: bool,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Build cert nodes."""
     df = cert_nodes.copy()
     if df.empty:
         return df, {"active_feature_columns": [], "dropped_columns": [], "issuer_family_vocab": []}

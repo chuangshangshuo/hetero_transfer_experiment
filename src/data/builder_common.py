@@ -1,3 +1,4 @@
+"""Shared helpers for node/edge builders: IO, normalisation, id maps, and audits."""
 from __future__ import annotations
 
 import hashlib
@@ -59,26 +60,31 @@ MULTIPART_SUFFIXES = {
 
 
 def read_csv(path: Path) -> pd.DataFrame:
+    """Read CSV."""
     if not path.exists():
         return pd.DataFrame()
     return pd.read_csv(path, dtype=str, keep_default_na=False)
 
 
 def write_csv(df: pd.DataFrame, path: Path) -> None:
+    """Write CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False, encoding="utf-8-sig")
 
 
 def write_json(payload: dict[str, Any], path: Path) -> None:
+    """Write json."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def short_hash(value: str, n: int = 12) -> str:
+    """Short hash."""
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:n]
 
 
 def sha256_file(path: Path) -> str:
+    """Sha256 file."""
     h = hashlib.sha256()
     with path.open("rb") as fh:
         for chunk in iter(lambda: fh.read(1024 * 1024), b""):
@@ -87,6 +93,7 @@ def sha256_file(path: Path) -> str:
 
 
 def clean_value(value: Any) -> str:
+    """Clean value."""
     if value is None:
         return ""
     text = str(value).strip()
@@ -96,16 +103,19 @@ def clean_value(value: Any) -> str:
 
 
 def normalize_text_token(value: Any) -> str:
+    """Normalise text token."""
     text = clean_value(value).lower()
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
 def parse_as_bool(value: Any) -> bool:
+    """Parse as bool."""
     return clean_value(value).lower() in {"1", "true", "yes", "success"}
 
 
 def _normalize_url_like(value: Any) -> str:
+    """Normalise url like."""
     text = clean_value(value).lower()
     if not text:
         return ""
@@ -122,6 +132,7 @@ def _normalize_url_like(value: Any) -> str:
 
 
 def _extract_host(value: Any, *, strip_port: bool) -> str:
+    """Extract host."""
     text = _normalize_url_like(value)
     if not text:
         return ""
@@ -144,14 +155,17 @@ def _extract_host(value: Any, *, strip_port: bool) -> str:
 
 
 def normalize_domain(value: Any) -> str:
+    """Normalise domain."""
     return _extract_host(value, strip_port=True)
 
 
 def coarse_redirect_host(value: Any) -> str:
+    """Coarse redirect host."""
     return _extract_host(value, strip_port=False)
 
 
 def coarse_redirect_site_with_port(value: Any) -> str:
+    """Coarse redirect site with port."""
     host = coarse_redirect_host(value)
     if not host:
         return ""
@@ -169,6 +183,7 @@ def coarse_redirect_site_with_port(value: Any) -> str:
 
 
 def registrable_domain(value: Any) -> str:
+    """Registrable domain."""
     host = normalize_domain(value)
     if not host:
         return ""
@@ -182,6 +197,7 @@ def registrable_domain(value: Any) -> str:
 
 
 def domain_features(domain: str) -> dict[str, float]:
+    """Domain features."""
     root = domain.split(".")[0] if domain else ""
     suffix = domain.split(".")[-1] if "." in domain else ""
     return {
@@ -196,6 +212,7 @@ def domain_features(domain: str) -> dict[str, float]:
 
 
 def parse_san_values(value: Any) -> list[str]:
+    """Parse san values."""
     text = clean_value(value)
     if not text:
         return []
@@ -209,12 +226,14 @@ def parse_san_values(value: Any) -> list[str]:
 
 
 def stable_top_categories(values: pd.Series, max_size: int) -> list[str]:
+    """Stable top categories."""
     cleaned = values.map(clean_value)
     cleaned = cleaned[cleaned != ""]
     if cleaned.empty:
         return []
 
     def sort_key(item: tuple[str, int]) -> tuple[int, int | str]:
+        """Sort key."""
         value, count = item
         secondary: int | str = int(value) if value.isdigit() else value
         return (-count, secondary)
@@ -225,6 +244,7 @@ def stable_top_categories(values: pd.Series, max_size: int) -> list[str]:
 
 
 def zscore(values: pd.Series, epsilon: float) -> tuple[np.ndarray, dict[str, float | bool]]:
+    """Zscore."""
     arr = pd.to_numeric(values, errors="coerce").fillna(0.0).to_numpy(dtype=float)
     if arr.size == 0:
         return arr, {"mean": 0.0, "std": 0.0, "epsilon": epsilon, "dropped": True}
@@ -246,6 +266,7 @@ def maybe_add_feature_column(
     feature_kind: str,
     drop_all_zero: bool = True,
 ) -> None:
+    """Maybe add feature column."""
     arr = np.asarray(values, dtype=float)
     if arr.ndim != 1 or len(arr) != len(frame):
         raise ValueError(f"Feature {feature_name} has invalid shape {arr.shape} for frame of length {len(frame)}.")
@@ -264,6 +285,7 @@ def maybe_add_feature_column(
 
 
 def assert_no_all_zero_columns(matrix: np.ndarray, feature_columns: list[str], node_type: str) -> None:
+    """Assert no all zero columns."""
     if matrix.ndim != 2:
         raise ValueError(f"{node_type}.x must be 2D, got shape={matrix.shape}.")
     if matrix.shape[1] == 0:
@@ -274,11 +296,13 @@ def assert_no_all_zero_columns(matrix: np.ndarray, feature_columns: list[str], n
 
 
 def join_unique(values: pd.Series) -> str:
+    """Join unique."""
     items = sorted({clean_value(v) for v in values.tolist() if clean_value(v)})
     return "|".join(items)
 
 
 def edge_count_to_weight(count: int) -> float:
+    """Edge count to weight."""
     return float(np.log1p(count))
 
 
@@ -288,6 +312,7 @@ def aggregate_edge_pairs(
     src_index_map: dict[str, int],
     dst_index_map: dict[str, int],
 ) -> pd.DataFrame:
+    """Aggregate edge pairs."""
     columns = [
         "edge_id",
         "src_id",
@@ -327,6 +352,7 @@ def aggregate_edge_pairs(
 
 
 def archive_file(path: Path, archive_root: Path) -> Path | None:
+    """Archive file."""
     if not path.exists():
         return None
     archive_root.mkdir(parents=True, exist_ok=True)
@@ -341,13 +367,16 @@ def archive_file(path: Path, archive_root: Path) -> Path | None:
 
 
 class NodeStore:
+    """Node Store."""
     def __init__(self, prefix: str, value_column: str) -> None:
+        """Initialise the instance."""
         self.prefix = prefix
         self.value_column = value_column
         self.value_to_id: dict[str, str] = {}
         self.rows: list[dict[str, Any]] = []
 
     def get(self, value: Any, **attrs: Any) -> str:
+        """Get."""
         cleaned = clean_value(value).lower()
         if not cleaned:
             return ""
@@ -368,12 +397,14 @@ class NodeStore:
         return self.value_to_id[cleaned]
 
     def to_frame(self) -> pd.DataFrame:
+        """Convert to frame."""
         if not self.rows:
             return pd.DataFrame()
         return pd.DataFrame(self.rows).sort_values("node_id").reset_index(drop=True)
 
 
 def load_maxmind_reader() -> Any:
+    """Load maxmind reader."""
     if not MAXMIND_DB.exists():
         return None
     try:
@@ -385,6 +416,7 @@ def load_maxmind_reader() -> Any:
 
 
 def lookup_asn(reader: Any, ip_value: str) -> tuple[str, str, str, str]:
+    """Lookup asn."""
     try:
         ip_obj = ipaddress.ip_address(ip_value)
     except ValueError:

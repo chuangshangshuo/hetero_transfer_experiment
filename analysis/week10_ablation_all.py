@@ -1,3 +1,4 @@
+"""Week-10 consolidated ablation table (table6) builder."""
 from __future__ import annotations
 
 import sys
@@ -13,6 +14,7 @@ from analysis.week10_common import DEFAULT_CONFIG, ensure_output_dirs, input_pat
 
 
 def add_representation_rows(config: dict, rows: list[dict]) -> None:
+    """Add representation rows."""
     w4 = read_input(config, "week4", "pooled_primary_summary")
     for _, row in w4.iterrows():
         rows.append(
@@ -67,6 +69,7 @@ def add_representation_rows(config: dict, rows: list[dict]) -> None:
 
 
 def add_transfer_rows(config: dict, rows: list[dict]) -> None:
+    """Add transfer rows."""
     transfer = read_input(config, "week7", "transfer_method_summary")
     for _, row in transfer.iterrows():
         rows.append(
@@ -102,6 +105,7 @@ def add_transfer_rows(config: dict, rows: list[dict]) -> None:
 
 
 def add_feature_rows(config: dict, rows: list[dict]) -> None:
+    """Add feature rows."""
     feature = read_input(config, "week8_patch", "corrected_e5_summary")
     for _, row in feature.iterrows():
         rows.append(
@@ -122,6 +126,7 @@ def add_feature_rows(config: dict, rows: list[dict]) -> None:
 
 
 def add_fewshot_rows(config: dict, rows: list[dict]) -> None:
+    """Add few-shot rows."""
     few = read_input(config, "week9", "fewshot_stability")
     for _, row in few.iterrows():
         rows.append(
@@ -142,6 +147,7 @@ def add_fewshot_rows(config: dict, rows: list[dict]) -> None:
 
 
 def add_family_rows(config: dict, rows: list[dict]) -> None:
+    """Add family rows."""
     hard = read_input(config, "week9", "hard_negative_summary")
     for _, row in hard.iterrows():
         rows.append(
@@ -162,6 +168,7 @@ def add_family_rows(config: dict, rows: list[dict]) -> None:
 
 
 def build_ablation_all(config: dict) -> pd.DataFrame:
+    """Build ablation all."""
     rows: list[dict] = []
     add_representation_rows(config, rows)
     add_transfer_rows(config, rows)
@@ -172,6 +179,7 @@ def build_ablation_all(config: dict) -> pd.DataFrame:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     frame = build_ablation_all(config)

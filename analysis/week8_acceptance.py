@@ -1,3 +1,4 @@
+"""Week-8 acceptance audit for the E1-E5 diagnostic experiments."""
 from __future__ import annotations
 
 import math
@@ -21,6 +22,7 @@ PAPER = ROOT / "paper" / "draft"
 
 
 def _finite(value: Any) -> float:
+    """Helper: finite."""
     try:
         out = float(value)
     except Exception:
@@ -29,6 +31,7 @@ def _finite(value: Any) -> float:
 
 
 def _status(pass_condition: bool, partial: bool = False) -> str:
+    """Helper: status."""
     if pass_condition:
         return "pass"
     if partial:
@@ -37,12 +40,14 @@ def _status(pass_condition: bool, partial: bool = False) -> str:
 
 
 def _load_csv(path: Path) -> pd.DataFrame:
+    """Load CSV."""
     if not path.exists():
         return pd.DataFrame()
     return pd.read_csv(path)
 
 
 def e1_rows() -> list[dict[str, Any]]:
+    """E1 rows."""
     summary = _load_csv(METRICS / "E1_edge_ablation_summary.csv")
     rows: list[dict[str, Any]] = []
     t3 = summary[summary["transfer_id"] == "T3_DiagnoseFrance"]
@@ -93,6 +98,7 @@ def e1_rows() -> list[dict[str, Any]]:
 
 
 def e2_rows() -> list[dict[str, Any]]:
+    """E2 rows."""
     metrics = _load_csv(METRICS / "E2_transferability_metrics.csv")
     rows: list[dict[str, Any]] = []
     if metrics.empty:
@@ -152,6 +158,7 @@ def e2_rows() -> list[dict[str, Any]]:
 
 
 def e3_rows() -> list[dict[str, Any]]:
+    """E3 rows."""
     summary = _load_csv(METRICS / "E3_lofo_family_sensitivity.csv")
     perm = _load_csv(METRICS / "E3_permutation_test_summary.csv")
     min_auc = float(summary["test_roc_auc_mean"].min()) if not summary.empty else float("nan")
@@ -196,6 +203,7 @@ def e3_rows() -> list[dict[str, Any]]:
 
 
 def e4_rows() -> list[dict[str, Any]]:
+    """E4 rows."""
     summary = _load_csv(METRICS / "E4_three_scenario_summary.csv")
     distances = _load_csv(METRICS / "E4_embedding_distances.csv")
     s2 = summary[summary["scenario"] == "S2_control"]
@@ -234,6 +242,7 @@ def e4_rows() -> list[dict[str, Any]]:
 
 
 def e5_rows() -> list[dict[str, Any]]:
+    """E5 rows."""
     raw = _load_csv(METRICS / "E5_structure_vs_lexical.csv")
     summary = _load_csv(METRICS / "E5_structure_vs_lexical_summary.csv")
     t3 = summary[summary["transfer_id"] == "T3_DiagnoseFrance"].set_index("config_id")
@@ -283,6 +292,7 @@ def e5_rows() -> list[dict[str, Any]]:
 
 
 def completion_rows() -> pd.DataFrame:
+    """Completion rows."""
     specs = [
         ("E1_raw_runs", METRICS / "E1_edge_ablation_raw_runs.csv", 120),
         ("E2_pair_scores", METRICS / "E2_pair_scores.csv", 30),
@@ -308,6 +318,7 @@ def completion_rows() -> pd.DataFrame:
 
 
 def markdown_table(frame: pd.DataFrame) -> str:
+    """Markdown table."""
     columns = list(frame.columns)
     lines = [
         "| " + " | ".join(columns) + " |",
@@ -326,6 +337,7 @@ def markdown_table(frame: pd.DataFrame) -> str:
 
 
 def write_paper_draft(audit: pd.DataFrame, completion: pd.DataFrame) -> None:
+    """Write paper draft."""
     PAPER.mkdir(parents=True, exist_ok=True)
     status_counts = audit["status"].value_counts().to_dict()
     text = f"""# Week 8 Mechanism Evidence Summary
@@ -350,6 +362,7 @@ Week 8 evaluated fifteen predeclared mechanism hypotheses across edge-channel ab
 
 
 def main() -> None:
+    """Command-line entry point."""
     rows: list[dict[str, Any]] = []
     rows.extend(e1_rows())
     rows.extend(e2_rows())

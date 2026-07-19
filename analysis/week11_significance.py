@@ -1,3 +1,4 @@
+"""Week-11 P4: paired-bootstrap significance with Holm correction (W7 pairs, W9 few-shot)."""
 from __future__ import annotations
 
 import itertools
@@ -19,11 +20,13 @@ from src.utils.significance_testing import holm_bonferroni, paired_bootstrap_pva
 
 
 def load_config(path: Path) -> dict[str, Any]:
+    """Load config."""
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def output_dirs(config: dict[str, Any]) -> dict[str, Path]:
+    """Return output directories."""
     root = Path(config["workspace_root"])
     paths = {name: root / rel for name, rel in config["output"].items()}
     for path in paths.values():
@@ -32,6 +35,7 @@ def output_dirs(config: dict[str, Any]) -> dict[str, Path]:
 
 
 def wilcoxon_p(a: np.ndarray, b: np.ndarray) -> float:
+    """Wilcoxon p."""
     mask = np.isfinite(a) & np.isfinite(b)
     a = a[mask]
     b = b[mask]
@@ -44,6 +48,7 @@ def wilcoxon_p(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def w7_method_pairwise(config: dict[str, Any]) -> pd.DataFrame:
+    """Week-7 method pairwise."""
     p4 = config["P4_significance"]
     raw = pd.read_csv(ROOT / config["inputs"]["week7_transfer_summary"])
     rows: list[dict[str, Any]] = []
@@ -87,6 +92,7 @@ def w7_method_pairwise(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def w9_fewshot_significance(config: dict[str, Any]) -> pd.DataFrame:
+    """Week-9 few-shot significance."""
     p4 = config["P4_significance"]
     raw = pd.read_csv(ROOT / config["inputs"]["week9_fewshot_curve"])
     raw = raw[raw["feature_condition"].eq("full") & raw["target_id"].isin(["T2_PH", "T3_DiagnoseFrance"])].copy()
@@ -126,6 +132,7 @@ def w9_fewshot_significance(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def overall_significance(w7: pd.DataFrame, w9: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
+    """Overall significance."""
     rows = [
         {
             "scope": "W7_method_pairwise",
@@ -162,6 +169,7 @@ def overall_significance(w7: pd.DataFrame, w9: pd.DataFrame, config: dict[str, A
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(ROOT / "configs" / "week11.yaml")
     paths = output_dirs(config)
     w7 = w7_method_pairwise(config)

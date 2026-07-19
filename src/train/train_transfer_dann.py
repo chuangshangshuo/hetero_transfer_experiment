@@ -1,3 +1,4 @@
+"""Week-7 DANN (and DANN+StruRW) transfer training entry point."""
 from __future__ import annotations
 
 import argparse
@@ -38,6 +39,7 @@ from src.transfer.dann_head import DomainDiscriminator
 
 
 def build_full_label_vector(bundle: GraphBundle, frame: pd.DataFrame) -> torch.Tensor:
+    """Build full label vector."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -51,6 +53,7 @@ def evaluate_transfer_predictions(
     model_name: str,
     seed: int,
 ) -> tuple[dict[str, float], pd.DataFrame]:
+    """Evaluate transfer predictions."""
     prediction_frame = build_prediction_frame(
         split_frame=split_frame,
         probabilities=probability_map,
@@ -79,6 +82,7 @@ def evaluate_transfer_predictions(
 
 
 def warmup_lambda(epoch: int, max_epochs: int, warmup_fraction: float, max_lambda: float) -> float:
+    """Warmup lambda."""
     warmup_epochs = max(1, int(max_epochs * warmup_fraction))
     if epoch >= warmup_epochs:
         return max_lambda
@@ -91,6 +95,7 @@ def run_transfer_model(
     model_name: str,
     seed: int,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run transfer model."""
     set_random_seed(seed)
     config = bundle.config["model_defaults"]
     device = resolve_device(bundle.config)
@@ -256,6 +261,7 @@ def save_run_outputs(
     split_frame: pd.DataFrame,
     split_filename: str,
 ) -> None:
+    """Save run outputs."""
     suffix = f"transfer_pooled_to_france__{model_name}__seed{seed}"
     save_dataframe(prediction_frame, bundle.output_paths["predictions"] / f"{suffix}.csv")
     save_dataframe(history, bundle.output_paths["logs"] / f"{suffix}_history.csv")
@@ -274,6 +280,7 @@ def save_run_outputs(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 4 transfer experiments for pooled -> France.")
     parser.add_argument(
         "--config",
@@ -296,6 +303,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     source_frame, target_frame = build_transfer_source_target_frames(bundle)

@@ -1,3 +1,4 @@
+"""Week-9 few-shot calibration experiments and audits (T2_PH, T3_FR)."""
 from __future__ import annotations
 
 import argparse
@@ -74,6 +75,7 @@ BASELINE_CONFIG = {
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Week 9 few-shot target calibration.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--week9-config", default=str(ROOT / "configs" / "week9_fewshot.yaml"))
@@ -88,6 +90,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_week9_config(path: str | Path) -> dict[str, Any]:
+    """Load week9 config."""
     config_path = Path(path)
     if not config_path.is_absolute():
         config_path = ROOT / config_path
@@ -100,6 +103,7 @@ def load_week9_config(path: str | Path) -> dict[str, Any]:
 
 
 def load_week7_split(transfer_id: str, checkpoint_seed: int) -> pd.DataFrame:
+    """Load week7 split."""
     path = ROOT / "output" / "week7" / "splits" / f"{transfer_id}__seed{checkpoint_seed}.csv"
     if not path.exists():
         raise FileNotFoundError(f"Missing Week 7 split: {path}")
@@ -107,6 +111,7 @@ def load_week7_split(transfer_id: str, checkpoint_seed: int) -> pd.DataFrame:
 
 
 def source_baselines() -> pd.DataFrame:
+    """Source baselines."""
     path = ROOT / "output" / "week8_patch" / "metrics" / "E5_structure_vs_lexical.csv"
     if not path.exists():
         raise FileNotFoundError(f"Missing corrected E5 baseline table: {path}")
@@ -124,6 +129,7 @@ def baseline_for(
     feature_condition: str,
     checkpoint_seed: int,
 ) -> pd.Series:
+    """Baseline for."""
     config_id = BASELINE_CONFIG[feature_condition]
     subset = baselines[
         (baselines["transfer_id"] == target_id)
@@ -143,6 +149,7 @@ def select_balanced_support(
     feature_condition: str,
     checkpoint_seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame, int]:
+    """Select balanced support."""
     pool = split_frame[split_frame["split"] == "target_adapt_unlabeled"].copy()
     counts = pool.groupby("label").size().to_dict()
     if set(counts) != {0, 1}:
@@ -200,6 +207,7 @@ def select_balanced_support(
 
 
 def build_label_vector(bundle: GraphBundle, split_frame: pd.DataFrame) -> torch.Tensor:
+    """Build label vector."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in split_frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -207,6 +215,7 @@ def build_label_vector(bundle: GraphBundle, split_frame: pd.DataFrame) -> torch.
 
 
 def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.device) -> torch.Tensor:
+    """Index tensor."""
     return torch.tensor(
         split_frame.loc[split_frame["split"] == split_name, "graph_node_index"].to_numpy(dtype=np.int64),
         dtype=torch.long,
@@ -215,6 +224,7 @@ def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.devic
 
 
 def compute_binary_metrics(y_true: np.ndarray, y_score: np.ndarray, threshold: float) -> dict[str, float]:
+    """Compute binary metrics."""
     y_pred = (y_score >= threshold).astype(int)
     if np.unique(y_true).size < 2:
         return {
@@ -249,6 +259,7 @@ def run_fewshot_train(
     smoke_test: bool,
     split_file: str,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run few-shot train."""
     set_random_seed(experiment_seed)
     encoder_state, encoder_checkpoint = load_encoder_state(bundle, checkpoint_seed)
     device = torch.device("cuda" if torch.cuda.is_available() and str(bundle.config["runtime"].get("device", "auto")) != "cpu" else "cpu")
@@ -385,6 +396,7 @@ def baseline_row(
     checkpoint_seed: int,
     split_file: str,
 ) -> dict[str, Any]:
+    """Baseline row."""
     auc = float(baseline["target_test_auc"])
     return {
         "created_at_utc": utc_now_iso(),
@@ -417,6 +429,7 @@ def baseline_row(
 
 
 def ci95(values: pd.Series) -> tuple[float, float]:
+    """Ci95."""
     vals = pd.to_numeric(values, errors="coerce").dropna()
     if vals.empty:
         return float("nan"), float("nan")
@@ -428,6 +441,7 @@ def ci95(values: pd.Series) -> tuple[float, float]:
 
 
 def stability_label(mean_delta: float, std_auc: float, success_rate_delta_ge_005: float) -> str:
+    """Stability label."""
     if abs(mean_delta) < 0.02:
         return "no meaningful improvement"
     if mean_delta > 0.10 and success_rate_delta_ge_005 >= 0.8:
@@ -440,6 +454,7 @@ def stability_label(mean_delta: float, std_auc: float, success_rate_delta_ge_005
 
 
 def wilcoxon_p(deltas: pd.Series) -> float:
+    """Wilcoxon p."""
     vals = pd.to_numeric(deltas, errors="coerce").dropna()
     if len(vals) < 5 or np.allclose(vals, 0.0):
         return float("nan")
@@ -452,6 +467,7 @@ def wilcoxon_p(deltas: pd.Series) -> float:
 
 
 def build_stability(raw: pd.DataFrame) -> pd.DataFrame:
+    """Build stability."""
     rows: list[dict[str, Any]] = []
     for (target_id, shot, condition, training_mode), part in raw.groupby(
         ["target_id", "shot", "feature_condition", "training_mode"]
@@ -492,6 +508,7 @@ def build_stability(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def shortcut_label(full_auc: float, condition_auc: float, full_delta: float, condition_delta: float) -> str:
+    """Shortcut label."""
     auc_gap = full_auc - condition_auc
     delta_gap = full_delta - condition_delta
     if auc_gap >= 0.05 or delta_gap >= 0.05:
@@ -502,6 +519,7 @@ def shortcut_label(full_auc: float, condition_auc: float, full_delta: float, con
 
 
 def build_shortcut_summary(stability: pd.DataFrame) -> pd.DataFrame:
+    """Build shortcut summary."""
     rows: list[dict[str, Any]] = []
     lookup = {
         (str(row.target_id), int(row.shot), str(row.feature_condition), str(row.training_mode)): row
@@ -559,6 +577,7 @@ def build_shortcut_summary(stability: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_rollup(stability: pd.DataFrame, shortcut_summary: pd.DataFrame) -> pd.DataFrame:
+    """Build rollup."""
     rows: list[dict[str, Any]] = []
     for target_id in TARGETS:
         full = stability[(stability["target_id"] == target_id) & (stability["feature_condition"] == "full")].copy()
@@ -613,6 +632,7 @@ def build_rollup(stability: pd.DataFrame, shortcut_summary: pd.DataFrame) -> pd.
 
 
 def build_acceptance_v2(rollup: pd.DataFrame) -> pd.DataFrame:
+    """Build acceptance v2."""
     rows: list[dict[str, Any]] = []
     for row in rollup.itertuples(index=False):
         final_status = str(row.final_status)
@@ -638,6 +658,7 @@ def build_acceptance_v2(rollup: pd.DataFrame) -> pd.DataFrame:
 
 
 def mark_legacy_preliminary_outputs(metrics_dir: Path) -> None:
+    """Mark legacy preliminary outputs."""
     legacy_files = [
         "fewshot_raw_runs.csv",
         "fewshot_summary.csv",
@@ -662,6 +683,7 @@ def mark_legacy_preliminary_outputs(metrics_dir: Path) -> None:
 
 
 def condition_from_path_token(token: str) -> str:
+    """Condition from path token."""
     return {
         "full": "full",
         "no_ccTLD": "no-ccTLD",
@@ -671,6 +693,7 @@ def condition_from_path_token(token: str) -> str:
 
 
 def split_identity(split_path: Path) -> tuple[str, str, int, int]:
+    """Split identity."""
     stem = split_path.stem
     if not stem.endswith("_split"):
         raise ValueError(f"Unexpected Week 9 split filename: {split_path.name}")
@@ -686,6 +709,7 @@ def split_identity(split_path: Path) -> tuple[str, str, int, int]:
 
 
 def write_week9_outputs(raw: pd.DataFrame, support_all: pd.DataFrame, out: Path) -> pd.DataFrame:
+    """Write week9 outputs."""
     save_dataframe(raw, out / "metrics" / "W9_E1_fewshot_curve.csv")
     save_dataframe(support_all, out / "audits" / "W9_fewshot_support_samples.csv")
     stability = build_stability(raw)
@@ -707,6 +731,7 @@ def write_week9_outputs(raw: pd.DataFrame, support_all: pd.DataFrame, out: Path)
 
 
 def rebuild_from_artifacts() -> None:
+    """Rebuild from artifacts."""
     out = ROOT / "output" / "week9"
     for sub in ["metrics", "plots", "logs", "runs", "predictions", "audits", "splits"]:
         (out / sub).mkdir(parents=True, exist_ok=True)
@@ -749,6 +774,7 @@ def rebuild_from_artifacts() -> None:
 
 
 def plot_target_curve(stability: pd.DataFrame, target_id: str, output_path: Path) -> None:
+    """Plot target curve."""
     target_frame = stability[stability["target_id"] == target_id]
     if target_frame.empty:
         return
@@ -768,6 +794,7 @@ def plot_target_curve(stability: pd.DataFrame, target_id: str, output_path: Path
 
 
 def plot_delta(stability: pd.DataFrame, output_path: Path) -> None:
+    """Plot delta."""
     if stability.empty:
         return
     fig, axis = plt.subplots(figsize=(8, 4.8))
@@ -788,6 +815,7 @@ def plot_delta(stability: pd.DataFrame, output_path: Path) -> None:
 
 
 def plot_shortcut(stability: pd.DataFrame, output_path: Path) -> None:
+    """Plot shortcut."""
     focus = stability[stability["shot"].isin([5, 10])].copy()
     if focus.empty:
         return
@@ -808,6 +836,7 @@ def plot_shortcut(stability: pd.DataFrame, output_path: Path) -> None:
 
 
 def markdown_table(frame: pd.DataFrame) -> str:
+    """Markdown table."""
     if frame.empty:
         return "_No rows._"
     text = frame.copy()
@@ -833,6 +862,7 @@ def merge_existing_frame(
     key_columns: list[str],
     enabled: bool,
 ) -> pd.DataFrame:
+    """Merge existing frame."""
     if not enabled or not path.exists():
         return new_frame.copy()
     existing = pd.read_csv(path)
@@ -853,6 +883,7 @@ def merge_existing_frame(
 
 
 def condition_matrix_text(stability: pd.DataFrame) -> str:
+    """Condition matrix text."""
     if stability.empty:
         return "- feature conditions: none\n"
     lines = []
@@ -863,6 +894,7 @@ def condition_matrix_text(stability: pd.DataFrame) -> str:
 
 
 def feature_condition_interpretation(stability: pd.DataFrame) -> str:
+    """Feature condition interpretation."""
     t2 = stability[
         (stability["target_id"] == "T2_PH")
         & (stability["shot"] == 10)
@@ -893,6 +925,7 @@ def feature_condition_interpretation(stability: pd.DataFrame) -> str:
 
 
 def write_docs(rollup: pd.DataFrame, stability: pd.DataFrame, shortcut: pd.DataFrame) -> None:
+    """Write docs."""
     docs = ROOT / "docs"
     paper = ROOT / "paper" / "draft"
     docs.mkdir(parents=True, exist_ok=True)
@@ -995,6 +1028,7 @@ def write_docs(rollup: pd.DataFrame, stability: pd.DataFrame, shortcut: pd.DataF
 
 
 def run(args: argparse.Namespace) -> None:
+    """Run."""
     if args.rebuild_from_artifacts:
         rebuild_from_artifacts()
         return
@@ -1131,6 +1165,7 @@ def run(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     run(parse_args())
 
 

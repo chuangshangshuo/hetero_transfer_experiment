@@ -1,3 +1,4 @@
+"""Build the frozen heterogeneous graph (nodes, edges, features) from the site registry."""
 from __future__ import annotations
 
 import json
@@ -130,6 +131,7 @@ CONFIG = {
 
 
 def provider_hint(nameserver: str) -> str:
+    """Provider hint."""
     ns = clean_value(nameserver).lower()
     if "cloudflare" in ns:
         return "cloudflare"
@@ -145,6 +147,7 @@ def provider_hint(nameserver: str) -> str:
 
 
 def collect_raw_graph_inputs(source_to_website: dict[str, str]) -> tuple[dict[str, pd.DataFrame], dict[str, pd.DataFrame], dict[str, Any]]:
+    """Collect raw graph inputs."""
     reader = load_maxmind_reader()
     stores = {
         "IP": NodeStore("IP", "ip"),
@@ -158,6 +161,7 @@ def collect_raw_graph_inputs(source_to_website: dict[str, str]) -> tuple[dict[st
     asn_hit_count = 0
 
     def add_edge(edge_type: str, src: str, dst: str, source_dataset: str, source_row: int) -> None:
+        """Add edge."""
         if not src or not dst:
             return
         edge_rows[edge_type].append(
@@ -170,6 +174,7 @@ def collect_raw_graph_inputs(source_to_website: dict[str, str]) -> tuple[dict[st
         )
 
     def add_ip(value: str) -> str:
+        """Add ip."""
         nonlocal asn_hit_count
         ip_value = clean_value(value)
         asn, org, is_private, is_global = lookup_asn(reader, ip_value)
@@ -319,6 +324,7 @@ def build_node_tables(
     raw_node_frames: dict[str, pd.DataFrame],
     website_nodes: pd.DataFrame,
 ) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
+    """Build node tables."""
     zscore_epsilon = CONFIG["features"]["zscore_epsilon"]
     drop_all_zero = CONFIG["features"]["drop_all_zero_columns"]
 
@@ -385,6 +391,7 @@ def build_forward_edges(
     raw_edge_frames: dict[str, pd.DataFrame],
     node_index: dict[str, dict[str, int]],
 ) -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:
+    """Build forward edges."""
     forward_edges = {
         "hosted_on": build_hosted_on_edges(raw_edge_frames.get("hosted_on", pd.DataFrame()), node_index),
         "uses_cert": build_uses_cert_edges(raw_edge_frames.get("uses_cert", pd.DataFrame()), node_index),
@@ -404,6 +411,7 @@ def annotate_website_isolation(
     website_nodes: pd.DataFrame,
     forward_edges: dict[str, pd.DataFrame],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Annotate website isolation."""
     connected_websites = set()
     for edge_type in FORWARD_EDGE_TYPES:
         df = forward_edges.get(edge_type, pd.DataFrame())
@@ -430,6 +438,7 @@ def annotate_website_isolation(
 
 
 def build_edge_dedup_summary(raw_edge_frames: dict[str, pd.DataFrame], forward_edges: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    """Build edge dedup summary."""
     rows = []
     for edge_type in FORWARD_EDGE_TYPES:
         raw_df = raw_edge_frames.get(edge_type, pd.DataFrame())
@@ -453,6 +462,7 @@ def build_graph_arrays(
     forward_edges: dict[str, pd.DataFrame],
     feature_builder_state: dict[str, Any],
 ) -> tuple[dict[str, np.ndarray], dict[str, Any], dict[str, int]]:
+    """Build graph arrays."""
     arrays: dict[str, np.ndarray] = {}
     feature_schema: dict[str, Any] = {}
     materialized_edge_counts: dict[str, int] = {}
@@ -498,6 +508,7 @@ def export_graph_package(
     feature_schema: dict[str, Any],
     metadata: dict[str, Any],
 ) -> tuple[Path, Path | None]:
+    """Export graph package."""
     GRAPH_ROOT.mkdir(parents=True, exist_ok=True)
     VERSION_ROOT.mkdir(parents=True, exist_ok=True)
 
@@ -551,6 +562,7 @@ def export_graph_package(
 
 
 def archive_previous_outputs() -> None:
+    """Archive previous outputs."""
     graph_archive = GRAPH_ROOT / "archived"
     version_archive = VERSION_ROOT / "archived"
     edge_archive = EDGE_ROOT / "archived"
@@ -562,6 +574,7 @@ def archive_previous_outputs() -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     for path in [NODE_ROOT, EDGE_ROOT, GRAPH_ROOT, VERSION_ROOT, AUDIT_ROOT]:
         path.mkdir(parents=True, exist_ok=True)
 

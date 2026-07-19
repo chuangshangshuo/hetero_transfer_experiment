@@ -1,3 +1,4 @@
+"""EERM: K-means virtual environments over encoder embeddings for IRM-style training."""
 from __future__ import annotations
 
 import numpy as np
@@ -23,6 +24,7 @@ def make_env_index_dict(
     env_ids: np.ndarray,
     min_env_samples: int = 4,
 ) -> dict[str, torch.Tensor]:
+    """Construct environment index dict."""
     env_ids = np.asarray(env_ids, dtype=int)
     if env_ids.shape[0] != int(base_indices.shape[0]):
         raise ValueError("env_ids length must match base_indices length")
@@ -44,6 +46,7 @@ def eerm_loss(
     env_indices: dict[str, torch.Tensor],
     lambda_irm: float = 1.0,
 ) -> tuple[torch.Tensor, dict[str, float]]:
+    """EERM loss."""
     env_logits = {env: logits[idx] for env, idx in env_indices.items()}
     env_labels = {env: labels[idx] for env, idx in env_indices.items()}
     return irm_loss_per_env(env_logits, env_labels, lambda_irm=lambda_irm)

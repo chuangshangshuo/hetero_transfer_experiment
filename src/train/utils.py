@@ -1,3 +1,4 @@
+"""Training utilities: config/graph loading, splits, metrics, IO helpers."""
 from __future__ import annotations
 
 import hashlib
@@ -30,6 +31,7 @@ PRIMARY_NEGATIVE_TIER = "licensed_baseline"
 
 @dataclass
 class GraphBundle:
+    """Graph Bundle."""
     config: dict[str, Any]
     config_path: Path
     config_hash: str
@@ -41,34 +43,41 @@ class GraphBundle:
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
+    """Load yaml."""
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def save_yaml(path: Path, payload: dict[str, Any]) -> None:
+    """Save yaml."""
     ensure_parent(path)
     with path.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, sort_keys=False, allow_unicode=True)
 
 
 def ensure_parent(path: Path) -> None:
+    """Ensure parent."""
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
 def ensure_directory(path: Path) -> None:
+    """Ensure directory."""
     path.mkdir(parents=True, exist_ok=True)
 
 
 def hash_dict(payload: dict[str, Any]) -> str:
+    """Hash dict."""
     dump = yaml.safe_dump(payload, sort_keys=True, allow_unicode=True)
     return hashlib.sha256(dump.encode("utf-8")).hexdigest()
 
 
 def resolve_workspace_path(config: dict[str, Any], relative_path: str) -> Path:
+    """Resolve workspace path."""
     return Path(config["workspace_root"]) / relative_path
 
 
 def build_output_paths(config: dict[str, Any]) -> dict[str, Path]:
+    """Build output paths."""
     output_paths = {
         name: resolve_workspace_path(config, rel_path)
         for name, rel_path in config["output"].items()
@@ -79,6 +88,7 @@ def build_output_paths(config: dict[str, Any]) -> dict[str, Path]:
 
 
 def set_random_seed(seed: int) -> None:
+    """Set random seed."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -87,6 +97,7 @@ def set_random_seed(seed: int) -> None:
 
 
 def resolve_device(config: dict[str, Any]) -> torch.device:
+    """Resolve device."""
     requested = config["runtime"].get("device", "auto")
     if requested == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -94,6 +105,7 @@ def resolve_device(config: dict[str, Any]) -> torch.device:
 
 
 def load_graph_bundle(config_path: Path | str) -> GraphBundle:
+    """Load graph bundle."""
     config_path = Path(config_path)
     config = load_yaml(config_path)
     output_paths = build_output_paths(config)
@@ -166,6 +178,7 @@ def load_graph_bundle(config_path: Path | str) -> GraphBundle:
 
 
 def validate_graph_bundle(bundle: GraphBundle) -> None:
+    """Validate graph bundle."""
     graph = bundle.graph_data
     expected_node_types = {"Website", "IP", "Certificate", "NameServer", "Registrar", "ExternalReference"}
     expected_edge_types = {
@@ -205,6 +218,7 @@ def validate_graph_bundle(bundle: GraphBundle) -> None:
 
 
 def build_primary_task_frame(bundle: GraphBundle) -> pd.DataFrame:
+    """Build primary task frame."""
     config = bundle.config
     label_space = set(config["tasks"]["primary_label_space"])
     frame = bundle.website_frame.copy()
@@ -216,12 +230,14 @@ def build_primary_task_frame(bundle: GraphBundle) -> pd.DataFrame:
 
 
 def build_same_region_task_frame(bundle: GraphBundle, jurisdiction: str) -> pd.DataFrame:
+    """Build same region task frame."""
     frame = build_primary_task_frame(bundle)
     frame = frame[frame["jurisdiction"] == jurisdiction].copy()
     return frame.reset_index(drop=True)
 
 
 def build_transfer_source_target_frames(bundle: GraphBundle) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build transfer source target frames."""
     primary = build_primary_task_frame(bundle)
     transfer_config = bundle.config["tasks"]["transfer_pooled_to_france"]
     target_jurisdiction = transfer_config["target_jurisdiction"]
@@ -236,6 +252,7 @@ def add_split_group(
     config: dict[str, Any],
     split_section: str = "pooled_primary",
 ) -> pd.DataFrame:
+    """Add split group."""
     split_config = config["splits"][split_section]
     group_columns = split_config.get("group_columns")
     if not group_columns:
@@ -266,6 +283,7 @@ def _distribution_score(
     candidate_idx: np.ndarray,
     target_fraction: float,
 ) -> float:
+    """Helper: distribution score."""
     candidate = frame.iloc[candidate_idx]
     score = abs((len(candidate) / len(frame)) - target_fraction)
     for column in ["label", "sample_tier"]:
@@ -282,6 +300,7 @@ def _best_group_shuffle_split(
     seed: int,
     attempts: int,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Helper: best group shuffle split."""
     groups = frame["split_group"].to_numpy()
     best_train_idx: np.ndarray | None = None
     best_test_idx: np.ndarray | None = None
@@ -304,6 +323,7 @@ def _best_group_shuffle_split(
 
 
 def make_pooled_primary_split(frame: pd.DataFrame, seed: int, config: dict[str, Any]) -> pd.DataFrame:
+    """Construct pooled primary split."""
     split_config = config["splits"]["pooled_primary"]
     train_size = split_config["train_fraction"]
     val_size = split_config["val_fraction"]
@@ -342,6 +362,7 @@ def make_pooled_primary_split(frame: pd.DataFrame, seed: int, config: dict[str, 
 
 
 def make_same_region_folds(frame: pd.DataFrame, jurisdiction: str, config: dict[str, Any]) -> pd.DataFrame:
+    """Construct same region folds."""
     split_config = config["splits"]["same_region_sensitivity"]
     grouped_frame = add_split_group(frame, config, "same_region_sensitivity").reset_index(drop=True)
     splitter = GroupKFold(n_splits=split_config["n_splits"])
@@ -383,6 +404,7 @@ def make_split_audit(
     jurisdiction: str | None = None,
     fold: int | None = None,
 ) -> pd.DataFrame:
+    """Construct split audit."""
     rows: list[dict[str, Any]] = []
     for split_name, split_part in split_frame.groupby("split", dropna=False):
         row: dict[str, Any] = {
@@ -434,6 +456,7 @@ def make_transfer_france_split(
     seed: int,
     config: dict[str, Any],
 ) -> pd.DataFrame:
+    """Construct transfer france split."""
     split_config = config["splits"]["transfer_pooled_to_france"]
     target_adapt = split_config["target_adapt_fraction"]
     target_val = split_config["target_val_fraction"]
@@ -478,16 +501,19 @@ def make_transfer_france_split(
 
 
 def save_dataframe(frame: pd.DataFrame, path: Path) -> None:
+    """Save dataframe."""
     ensure_parent(path)
     frame.to_csv(path, index=False)
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
+    """Write json."""
     ensure_parent(path)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def choose_threshold_by_youden(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """Choose threshold by youden."""
     unique_classes = np.unique(y_true)
     if unique_classes.size < 2:
         return 0.5
@@ -503,6 +529,7 @@ def choose_threshold_by_youden(y_true: np.ndarray, y_score: np.ndarray) -> float
 
 
 def safe_metric(metric_fn, y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """Safe metric."""
     unique_classes = np.unique(y_true)
     if unique_classes.size < 2:
         return float("nan")
@@ -514,6 +541,7 @@ def compute_binary_metrics(
     y_score: np.ndarray,
     threshold: float,
 ) -> dict[str, float]:
+    """Compute binary metrics."""
     y_pred = (y_score >= threshold).astype(int)
     metrics = {
         "roc_auc": safe_metric(roc_auc_score, y_true, y_score),
@@ -530,6 +558,7 @@ def summarise_runs(
     group_columns: Iterable[str],
     metric_columns: Iterable[str],
 ) -> pd.DataFrame:
+    """Summarise runs."""
     grouped = frame.groupby(list(group_columns), dropna=False)
     records: list[dict[str, Any]] = []
     for group_key, group_frame in grouped:
@@ -553,6 +582,7 @@ def build_prediction_frame(
     seed: int | None = None,
     fold: int | None = None,
 ) -> pd.DataFrame:
+    """Build prediction frame."""
     frame = split_frame.copy()
     frame["pred_prob_illegal"] = frame["graph_node_index"].map(probabilities).astype(float)
     frame["pred_label"] = (frame["pred_prob_illegal"] >= threshold).astype(int)
@@ -566,15 +596,18 @@ def build_prediction_frame(
 
 
 def record_run_manifest(path: Path, payload: dict[str, Any]) -> None:
+    """Record run manifest."""
     ensure_parent(path)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def utc_now_iso() -> str:
+    """Utc now iso."""
     return datetime.now(timezone.utc).isoformat()
 
 
 def metric_columns() -> list[str]:
+    """Metric columns."""
     return ["roc_auc", "pr_auc", "balanced_accuracy", "macro_f1", "threshold"]
 
 
@@ -587,6 +620,7 @@ def make_common_manifest(
     seed: int | None = None,
     fold: int | None = None,
 ) -> dict[str, Any]:
+    """Construct common manifest."""
     payload: dict[str, Any] = {
         "created_at_utc": utc_now_iso(),
         "graph_version": bundle.graph_metadata.get("graph_version"),
@@ -606,10 +640,12 @@ def make_common_manifest(
 
 
 def compute_sample_counts(frame: pd.DataFrame, split_column: str = "split") -> dict[str, int]:
+    """Compute sample counts."""
     return {str(name): int(count) for name, count in frame.groupby(split_column).size().items()}
 
 
 def plot_mean_roc_pr(prediction_frame: pd.DataFrame, output_path: Path) -> None:
+    """Plot mean ROC pr."""
     ensure_parent(output_path)
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     roc_axis, pr_axis = axes
@@ -651,6 +687,7 @@ def plot_mean_roc_pr(prediction_frame: pd.DataFrame, output_path: Path) -> None:
 
 
 def plot_transfer_comparison(summary_frame: pd.DataFrame, output_path: Path) -> None:
+    """Plot transfer comparison."""
     ensure_parent(output_path)
     fig, axis = plt.subplots(figsize=(7, 5))
     ordered = summary_frame.sort_values("model").reset_index(drop=True)

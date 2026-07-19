@@ -1,3 +1,4 @@
+"""Few-shot target-domain calibration: sample support sets and finetune the head."""
 from __future__ import annotations
 
 import copy
@@ -28,6 +29,7 @@ from src.train.utils import GraphBundle, resolve_device, set_random_seed
 
 
 def finite_auc(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """Finite AUC."""
     if np.unique(y_true).size < 2:
         return float("nan")
     return float(roc_auc_score(y_true, y_score))
@@ -39,6 +41,7 @@ def sample_fewshot_support(
     seed: int,
     source: str = "target_adapt_unlabeled",
 ) -> pd.DataFrame:
+    """Sample few-shot support."""
     pool = split_frame[split_frame["split"] == source].copy()
     if pool["label"].nunique() < 2:
         raise ValueError("Few-shot support requires a binary target adaptation pool")
@@ -56,6 +59,7 @@ def sample_fewshot_support(
 
 
 def build_fewshot_split(split_frame: pd.DataFrame, shots_per_class: int, seed: int) -> pd.DataFrame:
+    """Build few-shot split."""
     support = sample_fewshot_support(split_frame, shots_per_class=shots_per_class, seed=seed)
     support_nodes = set(support["node_id"].astype(str))
     adjusted = split_frame.copy()
@@ -70,6 +74,7 @@ def build_fewshot_split(split_frame: pd.DataFrame, shots_per_class: int, seed: i
 
 
 def build_label_vector(bundle: GraphBundle, split_frame: pd.DataFrame) -> torch.Tensor:
+    """Build label vector."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in split_frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -77,6 +82,7 @@ def build_label_vector(bundle: GraphBundle, split_frame: pd.DataFrame) -> torch.
 
 
 def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.device) -> torch.Tensor:
+    """Index tensor."""
     return torch.tensor(
         split_frame.loc[split_frame["split"] == split_name, "graph_node_index"].to_numpy(dtype=np.int64),
         dtype=torch.long,
@@ -92,6 +98,7 @@ def run_fewshot_finetune(
     shots_per_class: int,
     smoke_test: bool = False,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    """Run few-shot finetune."""
     set_random_seed(seed)
     fewshot_split = build_fewshot_split(split_frame, shots_per_class=shots_per_class, seed=seed)
     encoder_state, encoder_checkpoint = load_encoder_state(bundle, seed)

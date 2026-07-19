@@ -1,3 +1,4 @@
+"""Week-7 transfer runner: source_only and StruRW edge-reweighted training."""
 from __future__ import annotations
 
 import argparse
@@ -45,6 +46,7 @@ from src.transfer.strurw_reweight import StruRWReweighter
 
 
 def add_transfer_groups(frame: pd.DataFrame, group_columns: list[str]) -> pd.DataFrame:
+    """Add transfer groups."""
     grouped = frame.copy().reset_index(drop=True)
     split_group = pd.Series([""] * len(grouped), index=grouped.index, dtype="object")
     split_group_source = pd.Series([""] * len(grouped), index=grouped.index, dtype="object")
@@ -64,6 +66,7 @@ def add_transfer_groups(frame: pd.DataFrame, group_columns: list[str]) -> pd.Dat
 
 
 def distribution_score(frame: pd.DataFrame, candidate_idx: np.ndarray, target_fraction: float) -> float:
+    """Distribution score."""
     candidate = frame.iloc[candidate_idx]
     score = abs((len(candidate) / max(1, len(frame))) - target_fraction)
     for column in ["label", "sample_tier"]:
@@ -81,6 +84,7 @@ def best_group_split(
     attempts: int,
     require_two_classes_when_available: bool,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Best group split."""
     if len(frame) < 2:
         raise ValueError("Cannot split a transfer frame with fewer than two rows")
     groups = frame["split_group"].to_numpy()
@@ -114,6 +118,7 @@ def best_group_split(
 
 
 def build_transfer_split(bundle: GraphBundle, transfer_id: str, seed: int) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build transfer split."""
     config = bundle.config
     pair_config = config["transfer_pairs"][transfer_id]
     primary = build_primary_task_frame(bundle)
@@ -169,6 +174,7 @@ def build_transfer_split(bundle: GraphBundle, transfer_id: str, seed: int) -> tu
 
 
 def make_transfer_split_audit(split_frame: pd.DataFrame, transfer_id: str, seed: int) -> pd.DataFrame:
+    """Construct transfer split audit."""
     rows: list[dict[str, Any]] = []
     for split_name, part in split_frame.groupby("split", dropna=False):
         rows.append(
@@ -215,6 +221,7 @@ def make_transfer_split_audit(split_frame: pd.DataFrame, transfer_id: str, seed:
 
 
 def build_label_vector(bundle: GraphBundle, split_frame: pd.DataFrame, source_only: bool = False) -> torch.Tensor:
+    """Build label vector."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     if source_only:
         split_frame = split_frame[split_frame["domain_role"] == "source"]
@@ -224,6 +231,7 @@ def build_label_vector(bundle: GraphBundle, split_frame: pd.DataFrame, source_on
 
 
 def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.device) -> torch.Tensor:
+    """Index tensor."""
     return torch.tensor(
         split_frame.loc[split_frame["split"] == split_name, "graph_node_index"].to_numpy(dtype=np.int64),
         dtype=torch.long,
@@ -232,6 +240,7 @@ def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.devic
 
 
 def build_metapath_adjacency(bundle: GraphBundle, graph_data: Any, device: torch.device) -> dict[str, torch.Tensor]:
+    """Build metapath adjacency."""
     heco_config = bundle.config["heco"]
     artifacts = build_metapath_artifacts(
         data=graph_data.cpu(),
@@ -243,6 +252,7 @@ def build_metapath_adjacency(bundle: GraphBundle, graph_data: Any, device: torch
 
 
 def load_encoder_state(bundle: GraphBundle, seed: int) -> tuple[dict[str, torch.Tensor], str]:
+    """Load encoder state."""
     for template in bundle.config["heco"]["encoder_checkpoint_templates"]:
         checkpoint_path = resolve_workspace_path(bundle.config, template.format(seed=seed))
         if checkpoint_path.exists():
@@ -258,6 +268,7 @@ def make_finetune_model(
     encoder_state: dict[str, torch.Tensor],
     device: torch.device,
 ) -> HeCoFineTuneClassifier:
+    """Construct finetune model."""
     encoder = make_heco_model(bundle).to(device)
     encoder.load_state_dict(copy.deepcopy(encoder_state))
     return HeCoFineTuneClassifier(
@@ -273,6 +284,7 @@ def make_dann_model(
     encoder_state: dict[str, torch.Tensor],
     device: torch.device,
 ) -> HeCoDANNClassifier:
+    """Construct DANN model."""
     encoder = make_heco_model(bundle).to(device)
     encoder.load_state_dict(copy.deepcopy(encoder_state))
     return HeCoDANNClassifier(
@@ -284,12 +296,14 @@ def make_dann_model(
 
 
 def finite_auc(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """Finite AUC."""
     if np.unique(y_true).size < 2:
         return float("nan")
     return float(roc_auc_score(y_true, y_score))
 
 
 def evaluate_binary(y_true: np.ndarray, y_score: np.ndarray, threshold: float) -> dict[str, float]:
+    """Evaluate binary."""
     y_true = y_true.astype(int)
     y_score = y_score.astype(float)
     y_pred = (y_score >= threshold).astype(int)
@@ -330,6 +344,7 @@ def train_heco_transfer_model(
     force_full_epochs: bool = False,
     select_last_state: bool = False,
 ) -> tuple[dict[str, Any], pd.DataFrame, np.ndarray]:
+    """Train HeCo transfer model."""
     set_random_seed(seed)
     device = resolve_device(bundle.config)
     data = copy.deepcopy(graph_data).to(device)
@@ -515,6 +530,7 @@ def train_heco_transfer_model(
 
 
 def make_probability_frame(split_frame: pd.DataFrame, probabilities_all: np.ndarray, threshold: float, method: str) -> pd.DataFrame:
+    """Construct probability frame."""
     frame = split_frame.copy()
     frame["pred_prob_illegal"] = frame["graph_node_index"].map(lambda idx: float(probabilities_all[int(idx)]))
     frame["pred_label"] = (frame["pred_prob_illegal"] >= threshold).astype(int)
@@ -533,6 +549,7 @@ def summarize_run_metrics(
     domain_acc_final: float,
     pseudo_label_quality: float,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
+    """Summarise run metrics."""
     source_val = split_frame[split_frame["split"] == "source_val"].copy()
     source_val_scores = probabilities_all[source_val["graph_node_index"].to_numpy(dtype=int)]
     threshold = choose_threshold_by_youden(source_val["label"].to_numpy(dtype=int), source_val_scores)
@@ -619,6 +636,7 @@ def build_pseudo_labels(
     seed: int,
     iteration: int,
 ) -> tuple[torch.Tensor, torch.Tensor, dict[str, Any]]:
+    """Build pseudo labels."""
     threshold = float(bundle.config["strurw"]["pseudo_confidence_threshold"])
     strategy = str(bundle.config["strurw"].get("pseudo_label_strategy", "confidence_threshold"))
     entropy_top_fraction = float(bundle.config["strurw"].get("entropy_top_fraction", 0.30))
@@ -677,6 +695,7 @@ def build_pseudo_labels(
 
 
 def build_source_label_inputs(bundle: GraphBundle, split_frame: pd.DataFrame) -> tuple[torch.Tensor, torch.Tensor]:
+    """Build source label inputs."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     source_mask = torch.zeros((len(bundle.website_frame),), dtype=torch.bool)
     source_frame = split_frame[split_frame["domain_role"] == "source"]
@@ -696,6 +715,7 @@ def run_strurw_family(
     method: str,
     smoke_test: bool,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Run StruRW family."""
     current_graph = copy.deepcopy(bundle.graph_data.cpu())
     source_labels, source_mask = build_source_label_inputs(bundle, split_frame)
     reweighter = StruRWReweighter(
@@ -828,6 +848,7 @@ def run_single_experiment(
     method: str,
     smoke_test: bool,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Run single experiment."""
     if method in {"strurw", "dann_strurw"}:
         return run_strurw_family(bundle, split_frame, encoder_state, seed, transfer_id, method, smoke_test)
     core_method = "dann" if method == "dann" else "source_only"
@@ -870,6 +891,7 @@ def save_run_artifacts(
     history: pd.DataFrame,
     encoder_checkpoint: str,
 ) -> None:
+    """Save run artifacts."""
     suffix = f"{transfer_id}__{method}__seed{seed}"
     save_dataframe(history, bundle.output_paths["logs"] / f"{suffix}_history.csv")
     manifest = make_common_manifest(
@@ -890,6 +912,7 @@ def save_run_artifacts(
 
 
 def plot_transfer_boxplot(summary: pd.DataFrame, output_path: Path) -> None:
+    """Plot transfer boxplot."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     transfer_ids = list(dict.fromkeys(summary["transfer_id"].tolist()))
     method_order = ["source_only", "dann", "strurw", "dann_strurw"]
@@ -924,6 +947,7 @@ def plot_transfer_boxplot(summary: pd.DataFrame, output_path: Path) -> None:
 
 
 def plot_t3_dann_diagnostics(logs_dir: Path, output_path: Path) -> None:
+    """Plot t3 DANN diagnostics."""
     path = logs_dir / "T3_DiagnoseFrance__dann__seed42_history.csv"
     if not path.exists():
         return
@@ -953,6 +977,7 @@ def plot_t3_dann_diagnostics(logs_dir: Path, output_path: Path) -> None:
 
 
 def merge_existing_frame(path: Path, new_frame: pd.DataFrame, key_columns: list[str]) -> pd.DataFrame:
+    """Merge existing frame."""
     if path.exists() and path.stat().st_size > 0:
         try:
             existing = pd.read_csv(path)
@@ -968,6 +993,7 @@ def merge_existing_frame(path: Path, new_frame: pd.DataFrame, key_columns: list[
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 7 transfer experiments.")
     parser.add_argument(
         "--config",
@@ -987,6 +1013,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     if args.smoke_test and not args.formal_output_for_smoke:

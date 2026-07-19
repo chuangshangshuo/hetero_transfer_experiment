@@ -1,3 +1,4 @@
+"""Week-10 final few-shot summary tables."""
 from __future__ import annotations
 
 import sys
@@ -14,6 +15,7 @@ from analysis.week10_common import DEFAULT_CONFIG, ensure_output_dirs, input_pat
 
 
 def build_fewshot_final(config: dict) -> pd.DataFrame:
+    """Build few-shot final."""
     stability = read_input(config, "week9", "fewshot_stability")
     rollup = read_input(config, "week9", "fewshot_rollup")
     if stability.empty:
@@ -62,6 +64,7 @@ def build_fewshot_final(config: dict) -> pd.DataFrame:
 
 
 def plot_fewshot(frame: pd.DataFrame, output: Path) -> None:
+    """Plot few-shot."""
     if frame.empty:
         return
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
@@ -84,6 +87,7 @@ def plot_fewshot(frame: pd.DataFrame, output: Path) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     frame = build_fewshot_final(config)

@@ -1,3 +1,4 @@
+"""Convert the NPZ graph export into a PyTorch-Geometric HeteroData object."""
 from __future__ import annotations
 
 import argparse
@@ -16,6 +17,7 @@ else:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     root = Path(__file__).resolve().parents[2]
     parser = argparse.ArgumentParser(description="Convert Graph v2 NPZ package into PyG HeteroData.")
     parser.add_argument("--npz", type=Path, default=root / "data" / "graphs" / "hetero_graph_v2.npz")
@@ -25,6 +27,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     try:
         import torch

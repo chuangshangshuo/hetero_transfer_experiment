@@ -1,3 +1,4 @@
+"""Supervised baselines and HeCo finetune training entry point."""
 from __future__ import annotations
 
 import argparse
@@ -47,10 +48,12 @@ HEAD_ABLATION_TYPES = ["attention", "mlp_64", "linear", "fixed_mean", "schema_on
 
 
 def safe_name(value: str) -> str:
+    """Safe name."""
     return "".join(ch if ch.isalnum() else "_" for ch in str(value)).strip("_")
 
 
 def redirect_output_root(bundle: GraphBundle, root_name: str) -> None:
+    """Redirect output root."""
     workspace = Path(bundle.config["workspace_root"])
     for key in list(bundle.output_paths.keys()):
         subdir = key if key != "root" else ""
@@ -61,6 +64,7 @@ def redirect_output_root(bundle: GraphBundle, root_name: str) -> None:
 
 
 def build_labels(bundle: GraphBundle, task_frame: pd.DataFrame) -> torch.Tensor:
+    """Build labels."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in task_frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -68,6 +72,7 @@ def build_labels(bundle: GraphBundle, task_frame: pd.DataFrame) -> torch.Tensor:
 
 
 def build_metapath_adjacency(bundle: GraphBundle, device: torch.device) -> dict[str, torch.Tensor]:
+    """Build metapath adjacency."""
     artifacts = build_metapath_artifacts(
         data=bundle.graph_data.cpu(),
         metapath_relations=dict(bundle.config["heco"]["metapaths"]),
@@ -78,6 +83,7 @@ def build_metapath_adjacency(bundle: GraphBundle, device: torch.device) -> dict[
 
 
 def checkpoint_candidates(bundle: GraphBundle, seed: int) -> list[Path]:
+    """Checkpoint candidates."""
     heco_config = bundle.config["heco"]
     candidates = [
         resolve_workspace_path(bundle.config, heco_config["generated_checkpoint_template"].format(seed=seed)),
@@ -91,6 +97,7 @@ def load_or_pretrain_encoder(
     seed: int,
     smoke_test: bool,
 ) -> tuple[HeCoModel, dict[str, Any], pd.DataFrame | None]:
+    """Load or pretrain encoder."""
     temperature = float(bundle.config["heco"]["selected_temperature"])
     for checkpoint_path in checkpoint_candidates(bundle, seed):
         if checkpoint_path.exists():
@@ -139,6 +146,7 @@ def evaluate_predictions(
     model_name: str,
     task_name: str,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
+    """Evaluate predictions."""
     probability_map = dict(zip(split_frame["graph_node_index"], probabilities))
     prediction_frame = build_prediction_frame(
         split_frame=split_frame,
@@ -180,6 +188,7 @@ def run_single_seed_finetune(
     smoke_test: bool,
     optimizer_strategy: str,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame, dict[str, torch.Tensor]]:
+    """Run single seed finetune."""
     set_random_seed(seed)
     config = bundle.config["finetune"]
     device = resolve_device(bundle.config)
@@ -317,6 +326,7 @@ def save_finetune_outputs(
     pretrain_summary: dict[str, Any],
     optimizer_strategy: str,
 ) -> None:
+    """Save finetune outputs."""
     seed = int(metrics["seed"])
     suffix = f"heco_finetune__seed{seed}"
     if optimizer_strategy == "uniform":
@@ -342,6 +352,7 @@ def save_after_finetune_tsne(
     embedding_payload: dict[str, torch.Tensor],
     seed: int,
 ) -> None:
+    """Save after finetune tsne."""
     embedding_tensor = embedding_payload["fused_embedding"].numpy()
     metadata = bundle.website_frame[
         ["graph_node_index", "node_id", "root_domain", "jurisdiction", "sample_tier", "brand", "operator_or_case"]
@@ -406,6 +417,7 @@ def make_attention_audit_row(
     split_frame: pd.DataFrame,
     embedding_payload: dict[str, torch.Tensor],
 ) -> dict[str, Any]:
+    """Construct attention audit row."""
     row = {
         "task": metrics["task"],
         "model": metrics["model"],
@@ -448,6 +460,7 @@ def save_head_ablation_outputs(
     split_frame: pd.DataFrame,
     pretrain_summary: dict[str, Any],
 ) -> None:
+    """Save head ablation outputs."""
     seed = int(metrics["seed"])
     head = safe_name(str(metrics["head_type"]))
     suffix = f"head_ablation__{head}__seed{seed}"
@@ -471,6 +484,7 @@ def save_head_ablation_outputs(
 
 
 def run_head_ablation(bundle: GraphBundle, smoke_test: bool, head_type_filter: str | None = None) -> None:
+    """Run head ablation."""
     redirect_output_root(bundle, "week6_head_ablation")
     task_frame = build_primary_task_frame(bundle)
     heads = [head_type_filter] if head_type_filter else HEAD_ABLATION_TYPES
@@ -530,6 +544,7 @@ def run_head_ablation(bundle: GraphBundle, smoke_test: bool, head_type_filter: s
 
 
 def run_week6(bundle: GraphBundle, smoke_test: bool) -> None:
+    """Run week6."""
     task_frame = build_primary_task_frame(bundle)
     seeds = list(bundle.config["seeds"])
     if smoke_test:
@@ -580,6 +595,7 @@ def run_week6(bundle: GraphBundle, smoke_test: bool) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 6 HeCo discriminative-LR fine-tuning.")
     parser.add_argument(
         "--config",
@@ -608,6 +624,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     bundle.config["active_optimizer_strategy"] = args.optimizer_strategy

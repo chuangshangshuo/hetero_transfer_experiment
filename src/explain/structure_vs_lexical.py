@@ -1,3 +1,4 @@
+"""E5 ablation runner: structure-only / lexical-only / mixed configurations."""
 from __future__ import annotations
 
 import argparse
@@ -65,11 +66,13 @@ INFRA_RELATIONS = {
 
 
 def _empty_edge_store(store: Any) -> None:
+    """Helper: empty edge store."""
     store.edge_index = torch.empty((2, 0), dtype=store.edge_index.dtype)
     store.edge_weight = torch.empty((0,), dtype=store.edge_weight.dtype)
 
 
 def apply_feature_mode(data: Any, schema: dict[str, Any], mode: str) -> Any:
+    """Apply feature mode."""
     data = copy.deepcopy(data.cpu())
     website_x = data["Website"].x.clone()
     columns = list(schema["Website"]["feature_columns"])
@@ -103,6 +106,7 @@ def apply_feature_mode(data: Any, schema: dict[str, Any], mode: str) -> Any:
 
 
 def apply_edge_mode(data: Any, mode: str) -> Any:
+    """Apply edge mode."""
     data = copy.deepcopy(data.cpu())
     if mode == "full":
         return data
@@ -123,6 +127,7 @@ def apply_edge_mode(data: Any, mode: str) -> Any:
 
 
 def apply_e5_config(bundle: GraphBundle, config_id: str) -> Any:
+    """Apply E5 config."""
     config = bundle.config["E5_structure_vs_lexical"]["configs"][config_id]
     data = apply_feature_mode(bundle.graph_data, bundle.feature_schema, str(config["feature_mode"]))
     data = apply_edge_mode(data, str(config["edge_mode"]))
@@ -130,6 +135,7 @@ def apply_e5_config(bundle: GraphBundle, config_id: str) -> Any:
 
 
 def make_transform_audit(bundle: GraphBundle, config_id: str, graph_data: Any) -> pd.DataFrame:
+    """Construct transform audit."""
     config = bundle.config["E5_structure_vs_lexical"]["configs"][config_id]
     original = bundle.graph_data.cpu()
     rows: list[dict[str, Any]] = []
@@ -162,6 +168,7 @@ def make_transform_audit(bundle: GraphBundle, config_id: str, graph_data: Any) -
 
 
 def make_split_group_overlap_audit(split_frame: pd.DataFrame, config_id: str, transfer_id: str, seed: int) -> pd.DataFrame:
+    """Construct split group overlap audit."""
     rows: list[dict[str, Any]] = []
     for role in sorted(split_frame["domain_role"].dropna().unique()):
         part = split_frame[split_frame["domain_role"] == role]
@@ -194,6 +201,7 @@ def run_one_e5(
     seed: int,
     smoke_test: bool,
 ) -> dict[str, Any]:
+    """Run one E5."""
     split_frame, split_path = load_week7_split_or_build(bundle, transfer_id, seed)
     encoder_state, encoder_checkpoint = load_encoder_state(bundle, seed)
     graph_data = apply_e5_config(bundle, config_id)
@@ -257,6 +265,7 @@ def run_one_e5(
 
 
 def plot_e5(summary: pd.DataFrame, output_path: Path) -> None:
+    """Plot E5."""
     if summary.empty:
         return
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -298,6 +307,7 @@ def run_e5(
     config_filter: str | None,
     seed_filter: int | None,
 ) -> None:
+    """Run E5."""
     if smoke_test:
         redirect_output_root(bundle, "week8_smoke")
     transfers = list(bundle.config["E5_structure_vs_lexical"]["transfers"])
@@ -329,6 +339,7 @@ def run_e5(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 8 E5 structure-vs-lexical slicing.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -344,6 +355,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     if not args.smoke_test:

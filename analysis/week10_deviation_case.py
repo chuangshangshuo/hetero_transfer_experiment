@@ -1,3 +1,4 @@
+"""Week-10 deviation-case selection and export."""
 from __future__ import annotations
 
 import sys
@@ -14,6 +15,7 @@ from src.explain.deviation_case_viz import plot_deviation_cases
 
 
 def build_case_index(config: dict) -> pd.DataFrame:
+    """Build case index."""
     e5 = read_input(config, "week8_patch", "corrected_e5_acceptance")
     few = read_input(config, "week9", "fewshot_stability")
     hard = read_input(config, "week9", "hard_negative_summary")
@@ -75,6 +77,7 @@ def build_case_index(config: dict) -> pd.DataFrame:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     frame = build_case_index(config)

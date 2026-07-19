@@ -1,3 +1,4 @@
+"""Week-7 transfer acceptance summary and taxonomy."""
 from __future__ import annotations
 
 import sys
@@ -24,10 +25,12 @@ METHOD_ORDER = ["source_only", "dann", "strurw", "dann_strurw"]
 
 
 def strip_mean_suffix(column: str) -> str:
+    """Strip mean suffix."""
     return column[:-5] if column.endswith("_mean") else column
 
 
 def load_method_summary() -> pd.DataFrame:
+    """Load method summary."""
     path = METRICS / "transfer_method_summary.csv"
     if not path.exists():
         raise FileNotFoundError(path)
@@ -36,6 +39,7 @@ def load_method_summary() -> pd.DataFrame:
 
 
 def method_value(frame: pd.DataFrame, transfer_id: str, method: str, column: str) -> float:
+    """Method value."""
     row = frame[(frame["transfer_id"] == transfer_id) & (frame["method"] == method)]
     if row.empty:
         return float("nan")
@@ -43,6 +47,7 @@ def method_value(frame: pd.DataFrame, transfer_id: str, method: str, column: str
 
 
 def build_delta_matrix(summary: pd.DataFrame) -> pd.DataFrame:
+    """Build delta matrix."""
     rows: list[dict[str, Any]] = []
     metric_by_transfer = {
         "T1_Nordic": ("target_illegal_recall_at_youden_mean", "higher_is_better"),
@@ -76,6 +81,7 @@ def build_delta_matrix(summary: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_acceptance(summary: pd.DataFrame, delta: pd.DataFrame) -> pd.DataFrame:
+    """Build acceptance."""
     rows: list[dict[str, Any]] = []
 
     t1 = summary[summary["transfer_id"] == "T1_Nordic"].copy()
@@ -144,6 +150,7 @@ def build_acceptance(summary: pd.DataFrame, delta: pd.DataFrame) -> pd.DataFrame
 
 
 def plot_delta_heatmap(delta: pd.DataFrame, output_path: Path) -> None:
+    """Plot delta heatmap."""
     pivot = delta.pivot(index="transfer_id", columns="method", values="delta_vs_source_only")
     pivot = pivot.reindex(index=["T1_Nordic", "T2_PH", "T2_ON", "T3_DiagnoseFrance"], columns=METHOD_ORDER)
     values = pivot.to_numpy(dtype=float)
@@ -169,6 +176,7 @@ def plot_delta_heatmap(delta: pd.DataFrame, output_path: Path) -> None:
 
 
 def markdown_table(frame: pd.DataFrame) -> str:
+    """Markdown table."""
     display = frame.copy()
     for column in display.columns:
         if pd.api.types.is_float_dtype(display[column]):
@@ -186,6 +194,7 @@ def markdown_table(frame: pd.DataFrame) -> str:
 
 
 def build_paper_draft(summary: pd.DataFrame, acceptance: pd.DataFrame, delta: pd.DataFrame) -> str:
+    """Build paper draft."""
     table = summary[
         [
             "transfer_id",
@@ -230,6 +239,7 @@ For higher-is-better metrics, delta is method minus source-only. For T2_ON, delt
 
 
 def main() -> None:
+    """Command-line entry point."""
     summary = load_method_summary()
     delta = build_delta_matrix(summary)
     acceptance = build_acceptance(summary, delta)

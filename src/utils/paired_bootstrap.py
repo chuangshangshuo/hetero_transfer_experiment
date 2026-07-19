@@ -1,3 +1,4 @@
+"""Paired bootstrap over same-seed delta vectors (CI and sign p-values)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +8,7 @@ import numpy as np
 
 @dataclass(frozen=True)
 class BootstrapResult:
+    """Immutable result of a paired bootstrap run."""
     mean: float
     ci_lo: float
     ci_hi: float
@@ -18,6 +20,7 @@ class BootstrapResult:
 
 
 def _clean(values: np.ndarray | list[float]) -> np.ndarray:
+    """Drop non-finite entries and return a float64 array."""
     array = np.asarray(values, dtype=np.float64)
     return array[np.isfinite(array)]
 
@@ -69,5 +72,6 @@ def paired_bootstrap_ci(
     seed: int = 42,
     ci: float = 0.95,
 ) -> tuple[float, float]:
+    """Convenience wrapper returning only the bootstrap confidence interval."""
     result = paired_bootstrap(paired_deltas, B=B, seed=seed, ci=ci)
     return result.ci_lo, result.ci_hi

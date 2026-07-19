@@ -1,3 +1,4 @@
+"""Week-10 acceptance audit against pre-declared hypotheses."""
 from __future__ import annotations
 
 import sys
@@ -13,15 +14,18 @@ from analysis.week10_common import DEFAULT_CONFIG, ensure_output_dirs, load_conf
 
 
 def add(rows: list[dict], check: str, status: str, observed: str, expected: str, detail: str = "") -> None:
+    """Add."""
     rows.append({"check": check, "status": status, "observed": observed, "expected": expected, "detail": detail})
 
 
 def file_exists(rows: list[dict], path: str) -> None:
+    """File exists."""
     full = ROOT / path
     add(rows, f"{path}:exists", "pass" if full.exists() else "fail", "present" if full.exists() else "missing", "present")
 
 
 def posthoc_audit() -> pd.DataFrame:
+    """Post-hoc audit."""
     files = [
         "output/week10/metrics/final_rq_evidence_table.csv",
         "output/week10/metrics/final_hypothesis_rollup.csv",
@@ -44,6 +48,7 @@ def posthoc_audit() -> pd.DataFrame:
 
 
 def metric_consistency_audit() -> pd.DataFrame:
+    """Metric consistency audit."""
     rows = []
     rollup = read_csv("output/week9/metrics/week9_fewshot_rollup.csv")
     acc_v2 = read_csv("output/week9/metrics/fewshot_acceptance_audit_v2.csv")
@@ -63,6 +68,7 @@ def metric_consistency_audit() -> pd.DataFrame:
 
 
 def crosswalk() -> pd.DataFrame:
+    """Crosswalk."""
     rows = [
         ("fig7_feature_bucket_transfer.pdf", "feature_bucket_transfer_summary.csv", "RQ2 regional heterogeneity"),
         ("fig8_fewshot_curves.pdf", "fewshot_final_summary.csv", "RQ4 few-shot calibration"),
@@ -94,6 +100,7 @@ def crosswalk() -> pd.DataFrame:
 
 
 def build_acceptance() -> pd.DataFrame:
+    """Build acceptance."""
     rows: list[dict] = []
     required = [
         "output/week10/metrics/final_rq_evidence_table.csv",
@@ -123,6 +130,7 @@ def build_acceptance() -> pd.DataFrame:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     posthoc = posthoc_audit()

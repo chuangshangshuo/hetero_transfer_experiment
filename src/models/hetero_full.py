@@ -1,3 +1,4 @@
+"""Supervised HeteroConv baseline model over the full heterogeneous graph."""
 from __future__ import annotations
 
 from typing import Any
@@ -9,6 +10,7 @@ from torch_geometric.nn import GraphConv, HeteroConv, Linear
 
 
 class WeightedHeteroGNNClassifier(nn.Module):
+    """Weighted Hetero G N N Classifier (PyTorch module)."""
     def __init__(
         self,
         node_feature_dims: dict[str, int],
@@ -16,6 +18,7 @@ class WeightedHeteroGNNClassifier(nn.Module):
         hidden_dim: int = 64,
         dropout: float = 0.30,
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.hidden_dim = hidden_dim
         self.dropout = dropout
@@ -42,6 +45,7 @@ class WeightedHeteroGNNClassifier(nn.Module):
         )
 
     def _project_inputs(self, data: Any) -> dict[str, torch.Tensor]:
+        """Helper: project inputs."""
         x_dict: dict[str, torch.Tensor] = {}
         for node_type, linear in self.input_linears.items():
             features = data[node_type].x.float()
@@ -49,6 +53,7 @@ class WeightedHeteroGNNClassifier(nn.Module):
         return x_dict
 
     def encode(self, data: Any) -> dict[str, torch.Tensor]:
+        """Encode."""
         x_dict = self._project_inputs(data)
         edge_weight_dict = {
             edge_type: data[edge_type].edge_weight.float() for edge_type in data.edge_types
@@ -62,6 +67,7 @@ class WeightedHeteroGNNClassifier(nn.Module):
         return x_dict
 
     def forward(self, data: Any) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        """Run the forward pass."""
         embedding_dict = self.encode(data)
         logits = self.classifier(embedding_dict["Website"])
         return logits, embedding_dict

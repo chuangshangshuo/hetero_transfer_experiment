@@ -1,3 +1,4 @@
+"""Week-11 acceptance audit: 15 pre-declared hypotheses across P1-P5."""
 from __future__ import annotations
 
 import math
@@ -16,10 +17,12 @@ DESKTOP_ZIP = Path(r"<user_home>\Desktop\files.zip")
 
 
 def load_config() -> dict[str, Any]:
+    """Load config."""
     return yaml.safe_load((ROOT / "configs" / "week11.yaml").read_text(encoding="utf-8"))
 
 
 def output_dirs(config: dict[str, Any]) -> dict[str, Path]:
+    """Return output directories."""
     root = Path(config["workspace_root"])
     paths = {name: root / rel for name, rel in config["output"].items()}
     for path in paths.values():
@@ -28,6 +31,7 @@ def output_dirs(config: dict[str, Any]) -> dict[str, Path]:
 
 
 def copy_predeclared_docs(paths: dict[str, Path]) -> None:
+    """Copy predeclared docs."""
     if not DESKTOP_ZIP.exists():
         return
     with zipfile.ZipFile(DESKTOP_ZIP) as zf:
@@ -53,6 +57,7 @@ def add(
     forbidden: str,
     metric: str = "",
 ) -> None:
+    """Add."""
     rows.append(
         {
             "patch": patch,
@@ -70,14 +75,17 @@ def add(
 
 
 def ge(value: float, threshold: float) -> str:
+    """Ge."""
     return "pass" if math.isfinite(value) and value >= threshold else "fail"
 
 
 def le(value: float, threshold: float) -> str:
+    """Le."""
     return "pass" if math.isfinite(value) and value <= threshold else "fail"
 
 
 def p1_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+    """P1 rows."""
     p1_path = ROOT / config["output"]["metrics"] / "P1_family_metric_lofo.csv"
     ab_path = ROOT / config["output"]["metrics"] / "P1_alpha_ablation.csv"
     baseline_path = ROOT / config["inputs"]["week9_hard_negative_summary"]
@@ -104,12 +112,14 @@ def p1_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
 
 
 def source_baseline_map(config: dict[str, Any]) -> dict[tuple[str, int], float]:
+    """Source baseline map."""
     w7 = pd.read_csv(ROOT / config["inputs"]["week7_transfer_summary"])
     subset = w7[w7["method"].eq("source_only")]
     return {(row.transfer_id, int(row.seed)): float(row.primary_metric_value) for row in subset.itertuples()}
 
 
 def p2_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+    """P2 rows."""
     path = ROOT / config["output"]["metrics"] / "P2_method_comparison.csv"
     sens_path = ROOT / config["output"]["metrics"] / "P2_eerm_K_sensitivity.csv"
     safe = "IRM/EERM results are method-boundary evidence in small-sample heterogeneous transfer."
@@ -143,6 +153,7 @@ def p2_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
 
 
 def p3_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+    """P3 rows."""
     path = ROOT / config["output"]["metrics"] / "P3_full_fewshot_matrix.csv"
     safe = "Full few-shot matrix is interpreted target-by-target, including one-class boundary targets."
     forbidden = "Do not force ROC-AUC for one-class targets or claim universal few-shot improvement."
@@ -170,6 +181,7 @@ def p3_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
 
 
 def p4_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+    """P4 rows."""
     w7_path = ROOT / config["output"]["metrics"] / "P4_w7_method_pairwise.csv"
     w9_path = ROOT / config["output"]["metrics"] / "P4_w9_fewshot_significance.csv"
     safe = "Significance tests add uncertainty estimates and do not override effect-size interpretation."
@@ -189,6 +201,7 @@ def p4_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
 
 
 def count_chars(path: Path) -> int:
+    """Count chars."""
     if not path.exists():
         return 0
     text = path.read_text(encoding="utf-8")
@@ -196,6 +209,7 @@ def count_chars(path: Path) -> int:
 
 
 def p5_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+    """P5 rows."""
     safe = "The writing patch turns negative and diagnostic results into an explicit evidence-boundary framework."
     forbidden = "Do not rewrite the discussion as model-wide success."
     draft = ROOT / "paper" / "draft"
@@ -216,6 +230,7 @@ def p5_rows(config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
 
 
 def score_estimate(audit: pd.DataFrame) -> pd.DataFrame:
+    """Score estimate."""
     pass_count = int(audit["status"].eq("pass").sum())
     total = int(len(audit))
     key = audit[audit["hypothesis"].isin(["H_P1a", "H_P1b", "H_P1c", "H_P3a"])]
@@ -242,6 +257,7 @@ def score_estimate(audit: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config()
     paths = output_dirs(config)
     copy_predeclared_docs(paths)

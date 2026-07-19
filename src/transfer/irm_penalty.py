@@ -1,3 +1,4 @@
+"""IRMv1 penalty terms and the cosine warm-up schedule for lambda."""
 from __future__ import annotations
 
 import math
@@ -49,6 +50,7 @@ def irm_loss_per_env(
 
 
 def cosine_warmup_lambda(epoch: int, warmup_epochs: int, lambda_max: float) -> float:
+    """Cosine warm-up: ramp lambda from 0 to lambda_max over warmup_epochs."""
     if warmup_epochs <= 0 or epoch >= warmup_epochs:
         return float(lambda_max)
     progress = max(0.0, min(1.0, float(epoch) / float(warmup_epochs)))

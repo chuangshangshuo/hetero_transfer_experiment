@@ -1,3 +1,4 @@
+"""Shared loaders/constants for the Week-10 analysis scripts."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,6 +14,7 @@ OUT = ROOT / "output" / "week10"
 
 
 def load_config(path: str | Path = DEFAULT_CONFIG) -> dict[str, Any]:
+    """Load config."""
     config_path = Path(path)
     if not config_path.is_absolute():
         config_path = ROOT / config_path
@@ -20,26 +22,31 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> dict[str, Any]:
 
 
 def resolve(path: str | Path) -> Path:
+    """Resolve."""
     value = Path(path)
     return value if value.is_absolute() else ROOT / value
 
 
 def input_path(config: dict[str, Any], group: str, key: str) -> Path:
+    """Input path."""
     return resolve(config["inputs"][group][key])
 
 
 def output_path(config: dict[str, Any], group: str, name: str) -> Path:
+    """Return output path."""
     root = resolve(config["outputs"][group])
     root.mkdir(parents=True, exist_ok=True)
     return root / name
 
 
 def ensure_output_dirs(config: dict[str, Any]) -> None:
+    """Ensure output directories."""
     for key in ["root", "metrics", "tables", "figures", "audits"]:
         resolve(config["outputs"][key]).mkdir(parents=True, exist_ok=True)
 
 
 def read_csv(path: str | Path) -> pd.DataFrame:
+    """Read CSV."""
     full = resolve(path)
     if not full.exists():
         return pd.DataFrame()
@@ -47,16 +54,19 @@ def read_csv(path: str | Path) -> pd.DataFrame:
 
 
 def read_input(config: dict[str, Any], group: str, key: str) -> pd.DataFrame:
+    """Read input."""
     return read_csv(input_path(config, group, key))
 
 
 def save_csv(frame: pd.DataFrame, path: str | Path) -> None:
+    """Save CSV."""
     full = resolve(path)
     full.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(full, index=False, encoding="utf-8")
 
 
 def first_float(frame: pd.DataFrame, column: str, default: float = float("nan")) -> float:
+    """First float."""
     if frame.empty or column not in frame.columns:
         return default
     values = pd.to_numeric(frame[column], errors="coerce").dropna()
@@ -66,6 +76,7 @@ def first_float(frame: pd.DataFrame, column: str, default: float = float("nan"))
 
 
 def first_text(frame: pd.DataFrame, column: str, default: str = "") -> str:
+    """First text."""
     if frame.empty or column not in frame.columns:
         return default
     value = frame[column].dropna()
@@ -81,6 +92,7 @@ def with_claim_columns(
     safe: str,
     forbidden: str,
 ) -> dict[str, Any]:
+    """With claim columns."""
     row["status"] = status
     row["is_posthoc"] = bool(is_posthoc)
     row["paper_safe_claim"] = safe
@@ -89,6 +101,7 @@ def with_claim_columns(
 
 
 def markdown_table(frame: pd.DataFrame) -> str:
+    """Markdown table."""
     if frame.empty:
         return "_No rows._"
     text = frame.copy()
@@ -104,6 +117,7 @@ def markdown_table(frame: pd.DataFrame) -> str:
 
 
 def canonical_feature_condition(value: str) -> str:
+    """Canonical feature condition."""
     mapping = {
         "C1_full": "full",
         "C2_no_cctld": "no_cctld",

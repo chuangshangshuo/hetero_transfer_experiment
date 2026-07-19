@@ -1,3 +1,4 @@
+"""HeCo co-contrastive model: network-schema view, metapath view, and InfoNCE loss."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,6 +13,7 @@ from src.models.view_generators import MetapathViewEncoder, SchemaViewEncoder
 
 @dataclass
 class HeCoForwardOutput:
+    """He Co Forward Output."""
     schema_embedding: torch.Tensor
     metapath_embedding: torch.Tensor
     schema_projection: torch.Tensor
@@ -20,6 +22,7 @@ class HeCoForwardOutput:
 
 
 class HeCoModel(nn.Module):
+    """He Co Model (PyTorch module)."""
     def __init__(
         self,
         node_feature_dims: dict[str, int],
@@ -29,6 +32,7 @@ class HeCoModel(nn.Module):
         projection_dim: int = 64,
         dropout: float = 0.30,
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.schema_encoder = SchemaViewEncoder(
             node_feature_dims=node_feature_dims,
@@ -46,6 +50,7 @@ class HeCoModel(nn.Module):
         self.metapath_projection = TwoLayerProjectionHead(hidden_dim, hidden_dim, projection_dim, dropout)
 
     def forward(self, data, metapath_adjacency: dict[str, torch.Tensor]) -> HeCoForwardOutput:
+        """Run the forward pass."""
         schema_embedding = self.schema_encoder(data)
         metapath_embedding = self.metapath_encoder(data["Website"].x, metapath_adjacency)
         schema_projection = self.schema_projection(schema_embedding)
@@ -61,12 +66,15 @@ class HeCoModel(nn.Module):
 
 
 class HeCoContrastiveLoss(nn.Module):
+    """He Co Contrastive Loss (PyTorch module)."""
     def __init__(self, temperature: float = 0.5, hard_negative_ratio: float = 0.30) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.temperature = temperature
         self.hard_negative_ratio = hard_negative_ratio
 
     def _denominator_mask(self, similarity: torch.Tensor, positive_mask: torch.Tensor) -> torch.Tensor:
+        """Helper: denominator mask."""
         if self.hard_negative_ratio <= 0:
             return torch.ones_like(positive_mask, dtype=torch.bool)
         negative_mask = ~positive_mask
@@ -83,6 +91,7 @@ class HeCoContrastiveLoss(nn.Module):
         return denominator_mask
 
     def _directional_loss(self, anchor: torch.Tensor, target: torch.Tensor, positive_mask: torch.Tensor) -> torch.Tensor:
+        """Helper: directional loss."""
         anchor = F.normalize(anchor, p=2, dim=1)
         target = F.normalize(target, p=2, dim=1)
         similarity = (anchor @ target.t()) / self.temperature
@@ -99,6 +108,7 @@ class HeCoContrastiveLoss(nn.Module):
         metapath_projection: torch.Tensor,
         positive_mask: torch.Tensor,
     ) -> tuple[torch.Tensor, dict[str, float]]:
+        """Run the forward pass."""
         positive_mask = positive_mask.to(schema_projection.device)
         schema_to_metapath = self._directional_loss(schema_projection, metapath_projection, positive_mask)
         metapath_to_schema = self._directional_loss(

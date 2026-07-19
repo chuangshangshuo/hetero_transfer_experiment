@@ -1,3 +1,4 @@
+"""Week-11 P3: full few-shot calibration matrix (4 targets x 5 shots x 5 seeds)."""
 from __future__ import annotations
 
 import argparse
@@ -32,11 +33,13 @@ from src.train.utils import load_graph_bundle, set_random_seed, utc_now_iso
 
 
 def load_config(path: Path) -> dict[str, Any]:
+    """Load config."""
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def ensure_output_dirs(config: dict[str, Any]) -> dict[str, Path]:
+    """Ensure output directories."""
     root = Path(config["workspace_root"])
     paths = {name: root / rel for name, rel in config["output"].items()}
     for path in paths.values():
@@ -45,6 +48,7 @@ def ensure_output_dirs(config: dict[str, Any]) -> dict[str, Path]:
 
 
 def index_tensor(split_frame: pd.DataFrame, split_name: str, device: torch.device) -> torch.Tensor:
+    """Index tensor."""
     return torch.tensor(
         split_frame.loc[split_frame["split"] == split_name, "graph_node_index"].to_numpy(dtype=np.int64),
         dtype=torch.long,
@@ -59,6 +63,7 @@ def select_oneclass_support(
     seed: int,
     config: dict[str, Any],
 ) -> tuple[pd.DataFrame, pd.DataFrame, int]:
+    """Select oneclass support."""
     proto = config["P3_full_fewshot"]["one_class_protocols"][transfer_id]
     target_label = int(proto["target_support_label"])
     pool = split_frame[
@@ -111,6 +116,7 @@ def run_oneclass_fewshot(
     output_paths: dict[str, Path],
     smoke_test: bool = False,
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Run oneclass few-shot."""
     started = time.time()
     set_random_seed(seed)
     fewshot_split, support_audit, actual = select_oneclass_support(split_frame, transfer_id, shot, seed, config)
@@ -246,6 +252,7 @@ def run_oneclass_fewshot(
 
 
 def build_week9_full_rows(config: dict[str, Any]) -> pd.DataFrame:
+    """Build week9 full rows."""
     w9 = pd.read_csv(ROOT / config["inputs"]["week9_fewshot_curve"])
     w9 = w9[
         w9["target_id"].isin(["T2_PH", "T3_DiagnoseFrance"])
@@ -293,6 +300,7 @@ def build_week9_full_rows(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def add_source_baselines(frame: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
+    """Add source baselines."""
     week7 = pd.read_csv(ROOT / config["inputs"]["week7_transfer_summary"])
     baselines = week7[week7["method"].eq("source_only")][["transfer_id", "seed", "primary_metric_value"]]
     keyed = {(row.transfer_id, int(row.seed)): float(row.primary_metric_value) for row in baselines.itertuples()}
@@ -318,6 +326,7 @@ def add_source_baselines(frame: pd.DataFrame, config: dict[str, Any]) -> pd.Data
 
 
 def plot_curves(frame: pd.DataFrame, output_path: Path) -> None:
+    """Plot curves."""
     targets = ["T1_Nordic", "T2_PH", "T2_ON", "T3_DiagnoseFrance"]
     fig, axes = plt.subplots(2, 2, figsize=(10, 7))
     for ax, target in zip(axes.flatten(), targets):
@@ -338,6 +347,7 @@ def plot_curves(frame: pd.DataFrame, output_path: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Week 11 P3 full transfer few-shot matrix.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week11.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -345,6 +355,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     config = load_config(Path(args.config))
     output_paths = ensure_output_dirs(config)

@@ -1,3 +1,4 @@
+"""RQ1: pooled evaluation on the cross-verified (n=33) subset."""
 from __future__ import annotations
 
 import sys
@@ -17,6 +18,7 @@ SEEDS = [42, 43, 44, 45, 46]
 
 
 def compute_metrics(frame: pd.DataFrame) -> dict[str, float]:
+    """Compute metrics."""
     y_true = frame["label"].astype(int)
     y_score = frame["pred_prob_illegal"].astype(float)
     threshold = float(frame["threshold"].iloc[0]) if "threshold" in frame.columns else 0.5
@@ -30,6 +32,7 @@ def compute_metrics(frame: pd.DataFrame) -> dict[str, float]:
 
 
 def main() -> None:
+    """Command-line entry point."""
     metrics_dir = ROOT / "output" / "week6" / "metrics"
     audits_dir = ROOT / "output" / "week6" / "audits"
     ensure_directory(metrics_dir)

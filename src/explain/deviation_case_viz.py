@@ -1,3 +1,4 @@
+"""Visualise deviation cases selected by the Week-10 diagnostics."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,6 +8,7 @@ import pandas as pd
 
 
 def plot_deviation_cases(case_index: pd.DataFrame, output_path: str | Path) -> None:
+    """Plot deviation cases."""
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     if case_index.empty:

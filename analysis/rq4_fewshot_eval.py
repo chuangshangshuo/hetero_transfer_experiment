@@ -1,3 +1,4 @@
+"""RQ4: few-shot calibration evaluation and rollups."""
 from __future__ import annotations
 
 import argparse
@@ -25,6 +26,7 @@ from src.transfer.few_shot_finetune import run_fewshot_finetune
 
 
 def redirect_output(bundle: Any, root_name: str) -> None:
+    """Redirect output."""
     workspace = Path(bundle.config["workspace_root"])
     for key in list(bundle.output_paths.keys()):
         subdir = key if key != "root" else ""
@@ -35,6 +37,7 @@ def redirect_output(bundle: Any, root_name: str) -> None:
 
 
 def load_week7_split(bundle: Any, transfer_id: str, seed: int) -> pd.DataFrame:
+    """Load week7 split."""
     path = Path(bundle.config["workspace_root"]) / "output" / "week7" / "splits" / f"{transfer_id}__seed{seed}.csv"
     if path.exists():
         return pd.read_csv(path)
@@ -43,6 +46,7 @@ def load_week7_split(bundle: Any, transfer_id: str, seed: int) -> pd.DataFrame:
 
 
 def eligible_transfers(bundle: Any) -> list[str]:
+    """Eligible transfers."""
     configured = list(bundle.config.get("week9_fewshot", {}).get("transfers", []))
     if configured:
         return configured
@@ -50,6 +54,7 @@ def eligible_transfers(bundle: Any) -> list[str]:
 
 
 def plot_fewshot(summary: pd.DataFrame, output_path: Path) -> None:
+    """Plot few-shot."""
     if summary.empty:
         return
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -74,6 +79,7 @@ def plot_fewshot(summary: pd.DataFrame, output_path: Path) -> None:
 
 
 def build_acceptance(raw: pd.DataFrame) -> pd.DataFrame:
+    """Build acceptance."""
     rows = []
     for transfer_id, part in raw.groupby("transfer_id"):
         best = part.groupby("shots_per_class")["target_test_auc"].mean().sort_values(ascending=False)
@@ -102,6 +108,7 @@ def build_acceptance(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def run_week9_fewshot(bundle: Any, smoke_test: bool = False) -> None:
+    """Run week9 few-shot."""
     redirect_output(bundle, "week9_smoke" if smoke_test else "week9")
     bundle.config.setdefault("week9_fewshot", {})
     bundle.config["week9_fewshot"].setdefault("target_loss_weight", 1.0)
@@ -158,6 +165,7 @@ def run_week9_fewshot(bundle: Any, smoke_test: bool = False) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 9 few-shot RQ4 target adaptation.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--smoke-test", action="store_true")
@@ -165,6 +173,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     run_week9_fewshot(bundle, smoke_test=args.smoke_test)

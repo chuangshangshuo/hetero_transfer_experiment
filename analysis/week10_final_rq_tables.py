@@ -1,3 +1,4 @@
+"""Week-10 final RQ evidence tables and hypothesis rollup."""
 from __future__ import annotations
 
 import sys
@@ -26,6 +27,7 @@ from analysis.week10_common import (
 
 
 def build_rq1(config: dict[str, Any]) -> pd.DataFrame:
+    """Build rq1."""
     cv = read_input(config, "week6", "cross_verified")
     head = read_input(config, "week6", "head_ablation_summary")
     hard = read_input(config, "week9", "hard_negative_summary")
@@ -79,6 +81,7 @@ def build_rq1(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def build_rq2(config: dict[str, Any]) -> pd.DataFrame:
+    """Build rq2."""
     e5 = read_input(config, "week8_patch", "corrected_e5_acceptance")
     summary = read_input(config, "week8_patch", "corrected_e5_summary")
     t3 = summary[summary.get("transfer_id", "").eq("T3_DiagnoseFrance")] if not summary.empty else pd.DataFrame()
@@ -134,6 +137,7 @@ def build_rq2(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def build_rq3(config: dict[str, Any]) -> pd.DataFrame:
+    """Build rq3."""
     transfer = read_input(config, "week7", "transfer_summary")
     diagnostic = read_input(config, "week8", "diagnostic_rollup")
     rows: list[dict[str, Any]] = []
@@ -175,6 +179,7 @@ def build_rq3(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def build_rq4(config: dict[str, Any]) -> pd.DataFrame:
+    """Build rq4."""
     few = read_input(config, "week9", "fewshot_rollup")
     rows: list[dict[str, Any]] = []
     for _, row in few.iterrows():
@@ -206,6 +211,7 @@ def build_rq4(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def build_final_rq_evidence(config: dict[str, Any]) -> pd.DataFrame:
+    """Build final rq evidence."""
     return pd.concat(
         [build_rq1(config), build_rq2(config), build_rq3(config), build_rq4(config)],
         ignore_index=True,
@@ -214,6 +220,7 @@ def build_final_rq_evidence(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def build_hypothesis_rollup(config: dict[str, Any]) -> pd.DataFrame:
+    """Build hypothesis rollup."""
     sources = [
         ("week7_transfer", "week7", "acceptance_audit", True),
         ("week8_diagnostic", "week8", "diagnostic_rollup", True),
@@ -248,6 +255,7 @@ def build_hypothesis_rollup(config: dict[str, Any]) -> pd.DataFrame:
 
 
 def write_paper_stub(rq: pd.DataFrame, hyp: pd.DataFrame) -> None:
+    """Write paper stub."""
     paper_dir = ROOT / "paper" / "draft"
     paper_dir.mkdir(parents=True, exist_ok=True)
     cols = ["rq", "evidence_item", "metric", "value", "status", "is_posthoc", "paper_safe_claim", "paper_forbidden_claim"]
@@ -260,6 +268,7 @@ def write_paper_stub(rq: pd.DataFrame, hyp: pd.DataFrame) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     rq = build_final_rq_evidence(config)

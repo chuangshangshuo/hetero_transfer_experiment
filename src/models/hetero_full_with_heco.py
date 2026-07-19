@@ -1,3 +1,4 @@
+"""HeteroConv encoder initialised from a HeCo checkpoint, with finetune heads."""
 from __future__ import annotations
 
 import torch
@@ -7,7 +8,9 @@ from src.models.heco_head import HeCoModel
 
 
 class AttentionFusionHead(nn.Module):
+    """Attention Fusion Head (PyTorch module)."""
     def __init__(self, hidden_dim: int = 64, dropout: float = 0.30) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.attention = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
@@ -22,6 +25,7 @@ class AttentionFusionHead(nn.Module):
         )
 
     def forward(self, schema_embedding: torch.Tensor, metapath_embedding: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Run the forward pass."""
         stacked = torch.stack([schema_embedding, metapath_embedding], dim=1)
         weights = torch.softmax(self.attention(stacked), dim=1)
         fused = (weights * stacked).sum(dim=1)
@@ -30,12 +34,14 @@ class AttentionFusionHead(nn.Module):
 
 
 class FixedFusionHead(nn.Module):
+    """Fixed Fusion Head (PyTorch module)."""
     def __init__(
         self,
         mode: str,
         hidden_dim: int = 64,
         dropout: float = 0.30,
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.mode = mode
         self.classifier = nn.Sequential(
@@ -46,6 +52,7 @@ class FixedFusionHead(nn.Module):
         )
 
     def forward(self, schema_embedding: torch.Tensor, metapath_embedding: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Run the forward pass."""
         if self.mode == "fixed_mean":
             fused = 0.5 * (schema_embedding + metapath_embedding)
             weights = torch.full((schema_embedding.shape[0], 2), 0.5, device=schema_embedding.device)
@@ -73,6 +80,7 @@ class FixedFusionHead(nn.Module):
 
 
 class HeCoFineTuneClassifier(nn.Module):
+    """He Co Fine Tune Classifier (PyTorch module)."""
     def __init__(
         self,
         heco_encoder: HeCoModel,
@@ -80,6 +88,7 @@ class HeCoFineTuneClassifier(nn.Module):
         hidden_dim: int = 64,
         dropout: float = 0.30,
     ) -> None:
+        """Initialise the instance."""
         super().__init__()
         self.encoder = heco_encoder
         self.head_type = head_type
@@ -109,9 +118,11 @@ class HeCoFineTuneClassifier(nn.Module):
             raise ValueError(f"Unsupported HeCo finetune head_type: {head_type}")
 
     def encoder_parameters(self):
+        """Encoder parameters."""
         return self.encoder.parameters()
 
     def head_parameters(self):
+        """Head parameters."""
         if self.attention_head is not None:
             return self.attention_head.parameters()
         if self.fixed_head is not None:
@@ -121,6 +132,7 @@ class HeCoFineTuneClassifier(nn.Module):
         return self.classifier.parameters()
 
     def forward(self, data, metapath_adjacency: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+        """Run the forward pass."""
         output = self.encoder(data, metapath_adjacency)
         if self.attention_head is not None:
             logits, fused_embedding, attention_weights = self.attention_head(

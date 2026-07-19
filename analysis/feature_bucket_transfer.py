@@ -1,3 +1,4 @@
+"""Aggregate feature-bucket transfer contributions into summary tables."""
 from __future__ import annotations
 
 import sys
@@ -35,6 +36,7 @@ FEATURE_ORDER = [
 
 
 def build_feature_bucket_summary(config: dict) -> pd.DataFrame:
+    """Build feature bucket summary."""
     summary = read_input(config, "week8_patch", "corrected_e5_summary")
     if summary.empty:
         return pd.DataFrame()
@@ -66,6 +68,7 @@ def build_feature_bucket_summary(config: dict) -> pd.DataFrame:
 
 
 def status_label(row: pd.Series) -> str:
+    """Status label."""
     if row["transfer_id"] == "T3_DiagnoseFrance" and row["feature_condition"] in {"no_cctld", "no_website_lexical", "graph_only", "lexical_only"}:
         return "shortcut_boundary_diagnostic"
     if abs(float(row["delta_vs_full"])) >= 0.05:
@@ -74,18 +77,21 @@ def status_label(row: pd.Series) -> str:
 
 
 def safe_claim(row: pd.Series) -> str:
+    """Safe claim."""
     if row["transfer_id"] == "T3_DiagnoseFrance":
         return "T3 France is substantially assisted by lexical/ccTLD boundary features; graph-only is weaker than lexical-only."
     return "Feature-bucket ablation is diagnostic and target-dependent."
 
 
 def forbidden_claim(row: pd.Series) -> str:
+    """Forbidden claim."""
     if row["transfer_id"] == "T3_DiagnoseFrance":
         return "Do not claim T3 France proves pure structural transfer."
     return "Do not infer a universal feature mechanism from one target."
 
 
 def plot_feature_buckets(frame: pd.DataFrame, output: Path) -> None:
+    """Plot feature buckets."""
     focus = frame[frame["feature_condition"].isin(FEATURE_ORDER)].copy()
     if focus.empty:
         return
@@ -113,6 +119,7 @@ def plot_feature_buckets(frame: pd.DataFrame, output: Path) -> None:
 
 
 def main() -> None:
+    """Command-line entry point."""
     config = load_config(DEFAULT_CONFIG)
     ensure_output_dirs(config)
     frame = build_feature_bucket_summary(config)

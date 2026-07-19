@@ -1,3 +1,4 @@
+"""Build IP nodes with ASN one-hot plus summary statistics features."""
 from __future__ import annotations
 
 from typing import Any
@@ -13,6 +14,7 @@ def build_ip_nodes(
     asn_vocab_size: int,
     drop_all_zero_columns: bool,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Build ip nodes."""
     df = ip_nodes.copy()
     if df.empty:
         return df, {"active_feature_columns": [], "dropped_columns": [], "asn_vocab": []}

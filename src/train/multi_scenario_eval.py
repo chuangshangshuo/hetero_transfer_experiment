@@ -1,3 +1,4 @@
+"""Evaluate a trained model across pooled/per-jurisdiction/cross-verified scenarios."""
 from __future__ import annotations
 
 import argparse
@@ -47,6 +48,7 @@ from src.train.utils import (
 
 
 def redirect_output_root(bundle: GraphBundle, root_name: str) -> None:
+    """Redirect output root."""
     workspace = Path(bundle.config["workspace_root"])
     for key in list(bundle.output_paths.keys()):
         subdir = key if key != "root" else ""
@@ -57,6 +59,7 @@ def redirect_output_root(bundle: GraphBundle, root_name: str) -> None:
 
 
 def add_week8_groups(frame: pd.DataFrame, group_columns: list[str]) -> pd.DataFrame:
+    """Add week8 groups."""
     grouped = frame.copy().reset_index(drop=True)
     split_group = pd.Series([""] * len(grouped), index=grouped.index, dtype="object")
     for column in group_columns:
@@ -73,6 +76,7 @@ def add_week8_groups(frame: pd.DataFrame, group_columns: list[str]) -> pd.DataFr
 
 
 def _split_score(frame: pd.DataFrame, candidate_idx: np.ndarray, target_fraction: float) -> float:
+    """Split score."""
     if len(frame) == 0:
         return float("inf")
     candidate = frame.iloc[candidate_idx]
@@ -91,6 +95,7 @@ def best_group_shuffle(
     seed: int,
     attempts: int = 20,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Best group shuffle."""
     if len(frame) < 2:
         raise ValueError("Cannot split a frame with fewer than two rows")
     groups = frame["split_group"].to_numpy()
@@ -118,6 +123,7 @@ def best_group_shuffle(
 
 
 def build_labels(bundle: GraphBundle, split_frame: pd.DataFrame) -> torch.Tensor:
+    """Build labels."""
     labels = torch.full((len(bundle.website_frame),), -1, dtype=torch.long)
     for _, row in split_frame.iterrows():
         labels[int(row["graph_node_index"])] = int(row["label"])
@@ -125,6 +131,7 @@ def build_labels(bundle: GraphBundle, split_frame: pd.DataFrame) -> torch.Tensor
 
 
 def make_finetune_model(bundle: GraphBundle, encoder_state: dict[str, torch.Tensor], device: torch.device) -> HeCoFineTuneClassifier:
+    """Construct finetune model."""
     encoder = make_heco_model(bundle).to(device)
     encoder.load_state_dict(copy.deepcopy(encoder_state))
     return HeCoFineTuneClassifier(
@@ -147,6 +154,7 @@ def run_finetune_split(
     feature_mode: str = "full",
     edge_mode: str = "full",
 ) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame, dict[str, torch.Tensor]]:
+    """Run finetune split."""
     set_random_seed(seed)
     device = resolve_device(bundle.config)
     transformed_graph = apply_feature_mode(graph_data, bundle.feature_schema, feature_mode)
@@ -282,6 +290,7 @@ def run_finetune_split(
 
 
 def recall_at_fpr(y_true: np.ndarray, y_score: np.ndarray, max_fpr: float = 0.10) -> float:
+    """Recall at fpr."""
     y_true = np.asarray(y_true, dtype=int)
     y_score = np.asarray(y_score, dtype=float)
     if y_true.size == 0 or not np.any(y_true == 1) or not np.any(y_true == 0):
@@ -302,6 +311,7 @@ def recall_at_fpr(y_true: np.ndarray, y_score: np.ndarray, max_fpr: float = 0.10
 
 
 def build_e3_lofo_split(bundle: GraphBundle, assignments: pd.DataFrame, family_id: str, seed: int) -> pd.DataFrame:
+    """Build E3 leave-one-family-out split."""
     primary = build_primary_task_frame(bundle).copy()
     family_cols = ["node_id", "week8_family_id", "week8_family_source", "week8_family_size"]
     primary = primary.merge(assignments[family_cols], on="node_id", how="left")
@@ -480,6 +490,7 @@ def build_e3_random_split(
     permutation_id: int,
     reference_family: str,
 ) -> pd.DataFrame:
+    """Build E3 random split."""
     primary = build_primary_task_frame(bundle).copy()
     denmark = primary[primary["jurisdiction"] == "Denmark"].copy().reset_index(drop=True)
     negatives = primary[primary["label"] == 0].copy()
@@ -559,6 +570,7 @@ def save_week8_run(
     predictions: pd.DataFrame,
     encoder_checkpoint: str,
 ) -> None:
+    """Save week8 run."""
     save_dataframe(split_frame, bundle.output_paths["splits"] / f"{suffix}_split.csv")
     save_dataframe(history, bundle.output_paths["logs"] / f"{suffix}_history.csv")
     save_dataframe(predictions, bundle.output_paths["predictions"] / f"{suffix}_predictions.csv")
@@ -576,6 +588,7 @@ def save_week8_run(
 
 
 def plot_e3_summary(summary: pd.DataFrame, output_path: Path) -> None:
+    """Plot E3 summary."""
     if summary.empty:
         return
     plot_frame = summary.sort_values("test_roc_auc_mean", ascending=True)
@@ -593,6 +606,7 @@ def plot_e3_summary(summary: pd.DataFrame, output_path: Path) -> None:
 
 
 def run_e3(bundle: GraphBundle, smoke_test: bool, only_family: str | None = None) -> None:
+    """Run E3."""
     if smoke_test:
         redirect_output_root(bundle, "week8_smoke")
     assignments = extract_denmark_families(bundle)
@@ -656,12 +670,14 @@ def run_e3(bundle: GraphBundle, smoke_test: bool, only_family: str | None = None
 
 
 def _append_hard_eval_scores(hard_eval: pd.DataFrame, probabilities_all: np.ndarray) -> pd.DataFrame:
+    """Append hard eval scores."""
     frame = hard_eval.copy()
     frame["pred_prob_illegal"] = frame["graph_node_index"].map(lambda idx: float(probabilities_all[int(idx)]))
     return frame
 
 
 def _hard_eval_metrics(hard_eval_scores: pd.DataFrame, seed: int, family_id: str) -> dict[str, Any]:
+    """Helper: hard eval metrics."""
     y_true = hard_eval_scores["family_eval_label"].to_numpy(dtype=int)
     y_score = hard_eval_scores["pred_prob_illegal"].to_numpy(dtype=float)
     metrics = evaluate_binary(y_true, y_score, threshold=0.5)
@@ -689,6 +705,7 @@ def _hard_eval_metrics(hard_eval_scores: pd.DataFrame, seed: int, family_id: str
 
 
 def run_e3_w85(bundle: GraphBundle, smoke_test: bool, only_family: str | None = None) -> None:
+    """Run E3 w85."""
     redirect_output_root(bundle, "week85_smoke" if smoke_test else "week85")
     assignments = extract_denmark_families(bundle)
     save_dataframe(assignments, bundle.output_paths["audits"] / "E3_w85_dk_family_assignments.csv")
@@ -785,6 +802,7 @@ def run_e3_permutation(
     permutation_start: int = 0,
     permutation_count: int | None = None,
 ) -> None:
+    """Run E3 permutation."""
     if smoke_test:
         redirect_output_root(bundle, "week8_smoke")
     assignments_path = bundle.output_paths["audits"] / "E3_dk_family_assignments.csv"
@@ -874,6 +892,7 @@ def run_e3_permutation(
 
 
 def build_e4_scenario_frame(bundle: GraphBundle, scenario_id: str) -> pd.DataFrame:
+    """Build E4 scenario frame."""
     scenario = bundle.config["E4_control_groups"]["scenarios"][scenario_id]
     frame = bundle.website_frame.copy()
     if bool(bundle.config["runtime"].get("exclude_isolated_websites", True)):
@@ -887,6 +906,7 @@ def build_e4_scenario_frame(bundle: GraphBundle, scenario_id: str) -> pd.DataFra
 
 
 def build_pooled_split(frame: pd.DataFrame, bundle: GraphBundle, seed: int, task_name: str) -> pd.DataFrame:
+    """Build pooled split."""
     split_config = bundle.config["splits"]["pooled_primary"]
     grouped = add_week8_groups(frame, list(split_config["group_columns"]))
     train_idx, temp_idx = best_group_shuffle(
@@ -914,6 +934,7 @@ def build_pooled_split(frame: pd.DataFrame, bundle: GraphBundle, seed: int, task
 
 
 def extract_frozen_embeddings(bundle: GraphBundle, encoder_state: dict[str, torch.Tensor]) -> np.ndarray:
+    """Extract frozen embeddings."""
     device = resolve_device(bundle.config)
     data = copy.deepcopy(bundle.graph_data.cpu()).to(device)
     metapath_adjacency = build_metapath_adjacency(bundle, bundle.graph_data.cpu(), device)
@@ -926,6 +947,7 @@ def extract_frozen_embeddings(bundle: GraphBundle, encoder_state: dict[str, torc
 
 
 def compute_e4_distances(bundle: GraphBundle, seed: int, embedding: np.ndarray) -> dict[str, Any]:
+    """Compute E4 distances."""
     frame = bundle.website_frame.copy()
     if bool(bundle.config["runtime"].get("exclude_isolated_websites", True)):
         frame = frame[frame["exclude_from_training_default"] != 1].copy()
@@ -936,9 +958,11 @@ def compute_e4_distances(bundle: GraphBundle, seed: int, embedding: np.ndarray) 
     control = idx[(tiers == "control_legal_commercial").to_numpy()]
 
     def centroid_distance(a: np.ndarray, b: np.ndarray) -> float:
+        """Centroid distance."""
         return float(np.linalg.norm(embedding[a].mean(axis=0) - embedding[b].mean(axis=0)))
 
     def spread(indices: np.ndarray) -> float:
+        """Spread."""
         centered = embedding[indices] - embedding[indices].mean(axis=0, keepdims=True)
         return float(np.sqrt((centered * centered).sum(axis=1)).mean())
 
@@ -958,6 +982,7 @@ def compute_e4_distances(bundle: GraphBundle, seed: int, embedding: np.ndarray) 
 
 
 def save_e4_tsne(bundle: GraphBundle, seed: int, embedding: np.ndarray) -> None:
+    """Save E4 tsne."""
     frame = bundle.website_frame.copy()
     tiers = {
         "illegal": frame["sample_tier"].astype(str).str.startswith("illegal_confirmed_"),
@@ -996,6 +1021,7 @@ def save_e4_tsne(bundle: GraphBundle, seed: int, embedding: np.ndarray) -> None:
 
 
 def run_e4(bundle: GraphBundle, smoke_test: bool) -> None:
+    """Run E4."""
     if smoke_test:
         redirect_output_root(bundle, "week8_smoke")
     seeds = [int(seed) for seed in bundle.config["seeds"]]
@@ -1035,6 +1061,7 @@ def run_e4(bundle: GraphBundle, smoke_test: bool) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Week 8 multi-scenario experiments E3/E4.")
     parser.add_argument("--config", default=str(ROOT / "configs" / "week8.yaml"))
     parser.add_argument("--experiment", choices=["E3", "E3_W85", "E3_PERM", "E4"], default="E3")
@@ -1047,6 +1074,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Command-line entry point."""
     args = parse_args()
     bundle = load_graph_bundle(args.config)
     if args.experiment == "E3":

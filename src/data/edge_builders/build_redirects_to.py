@@ -1,3 +1,4 @@
+"""Build (deprecated) Website->Website redirects_to edges; kept for audits."""
 from __future__ import annotations
 
 import pandas as pd
@@ -10,6 +11,7 @@ def build_redirect_audit(
     source_to_website: dict[str, str],
     domain_to_website: dict[str, str],
 ) -> pd.DataFrame:
+    """Build redirect audit."""
     if redirect_rows.empty:
         return pd.DataFrame(
             [
