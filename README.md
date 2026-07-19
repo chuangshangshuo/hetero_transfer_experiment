@@ -28,6 +28,7 @@ reports/                  Final integrated Week11 report in Markdown and DOCX
 results/                  Aggregate metrics, tables, plots, audits, and final evidence tables
 scripts/                  Setup and release-packaging utilities
 src/                      Data, model, transfer, training, and explanation code
+tests/                    Unit tests for the pure-logic modules (run without private data)
 reproducibility/          Project logs copied from the canonical workspace
 ```
 
@@ -54,6 +55,13 @@ website detection. The final interpretation is deliberately bounded:
 - Week11 patch/audit metrics: [`results/week11/metrics/`](results/week11/metrics/)
 - Week11 figures: [`results/week11/plots/`](results/week11/plots/)
 - Final artifact audit: [`results/final_artifact_audit.csv`](results/final_artifact_audit.csv)
+- Supplementary exact significance (n=5 sign-flip permutation / sign / exact
+  Wilcoxon tests over the released seed-level deltas):
+  [`analysis/supp_exact_significance.py`](analysis/supp_exact_significance.py)
+  with outputs under
+  [`reports/supplementary_exact_significance/`](reports/supplementary_exact_significance/).
+  Headline: none of the 24 W7 method pairs survives Holm correction at the
+  exact n=5 resolution (two-sided floor p=0.0625).
 - Release file manifest: [`MANIFEST_RELEASE.csv`](MANIFEST_RELEASE.csv)
 
 ## What Is Intentionally Excluded
@@ -73,6 +81,14 @@ See [`DATA_AVAILABILITY.md`](DATA_AVAILABILITY.md) for the data-release policy.
 The repository keeps the code and aggregate outputs needed to audit the claims.
 Full reruns require the private/non-public raw graph inputs and local conda
 environment used in the original workspace. See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md).
+
+Unit tests under [`tests/`](tests/) cover the pure-logic modules (paired
+bootstrap, Holm correction, exact permutation tests, LogME scoring, family
+pattern matching) and run against the released aggregate data only:
+
+```bash
+python -m pytest tests/
+```
 
 ## Release Status
 

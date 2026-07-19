@@ -25,6 +25,13 @@ Useful files:
 
 ## Audit Commands
 
+The following need only the released aggregate CSVs (no private data):
+
+```powershell
+python -m pytest tests/                       # 32 unit tests over pure-logic modules
+python analysis/supp_exact_significance.py    # exact n=5 significance (sign-flip permutation)
+```
+
 When the private data/checkpoints are available, run from the canonical
 workspace root:
 
