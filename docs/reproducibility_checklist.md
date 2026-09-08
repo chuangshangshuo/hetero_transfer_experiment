@@ -28,7 +28,11 @@ what should be treated as saved evidence rather than a fresh claim.
 - Week 8 preregistered mechanism layer: `output/week8/`
 - Week 8.5 correction layer: `output/week85/`
 - Corrected E5 post-hoc diagnostics: `output/week8_patch/`
-- Week 6 head-ablation diagnostics: `output/week6_head_ablation/`
+- Week 6 head-ablation diagnostics: `output/week6_head_ablation/` — this is where the
+  reported main result lives (`mlp_64`, pooled AUC 0.971 ± 0.016). A bare
+  `train_full.py` run uses the frozen `finetune.head_type: attention_pool_mlp_64`
+  from `configs/week6_heco_finetune.yaml` and reproduces the 0.932 ± 0.072 ablation
+  arm instead; pass `--head-ablation` for the six-head comparison.
 - Week 9 few-shot and hard-negative audits: `output/week9/`
 - Week 10 final RQ rollup: `output/week10/`
 
@@ -43,6 +47,7 @@ python src\data\convert_npz_to_pyg.py
 python src\train\train_single.py
 python src\train\train_contrastive.py
 python src\train\train_full.py
+python src\train\train_full.py --head-ablation
 python src\train\train_transfer.py --methods source_only
 python src\train\train_transfer.py --methods dann
 python src\train\train_transfer.py --methods strurw dann_strurw

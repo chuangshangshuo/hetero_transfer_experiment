@@ -1,4 +1,14 @@
-"""Week-7 DANN (and DANN+StruRW) transfer training entry point."""
+"""Week-4 pilot DANN transfer runner (superseded; kept for provenance only).
+
+This is NOT the source of the reported Week-7 transfer results. It defaults to
+``configs/week4_experiments.yaml``, reads ``model_defaults.domain_loss_lambda_max`` /
+``domain_loss_warmup_fraction`` (keys that exist only in the Week-4 config), and
+selects the best epoch on *target_val* AUC. The 80 reported transfer runs come from
+``src/train/train_transfer.py`` with ``configs/week7_transfer.yaml``, which warms the
+GRL lambda over ``dann.lambda_warmup_epochs`` and selects on the *source* validation
+split -- see ``selection_policy=best_source_val_after_dann_warmup`` in
+``results/week7/metrics/transfer_summary.csv``.
+"""
 from __future__ import annotations
 
 import argparse

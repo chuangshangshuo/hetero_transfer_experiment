@@ -119,6 +119,7 @@ python src\train\train_contrastive.py
 python src\train\train_contrastive.py --smoke-test
 python src\train\train_full.py
 python src\train\train_full.py --optimizer-strategy uniform
+python src\train\train_full.py --head-ablation
 python analysis\rq1_cross_verified_eval.py
 python analysis\ablation_week6.py
 python src\train\train_transfer.py --methods source_only
