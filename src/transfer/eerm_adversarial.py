@@ -139,9 +139,14 @@ def eerm_step(
         log_probs.append(logp)
         risks.append(risk)
     risk_vec = torch.stack(risks)
-    reward = (risk_vec - risk_vec.mean()).pow(2).detach()
-    baseline = reward.mean()
-    editor_loss = -torch.stack([lp * (r - baseline) for lp, r in zip(log_probs, reward)]).mean()
+    # REINFORCE on the variance objective. For Var = (1/K) * sum_j (r_j - rbar)^2 the partial
+    # derivative w.r.t. environment k's risk is (2/K) * (r_k - rbar), so the per-environment
+    # reward is the SIGNED deviation from the mean risk, not its square. Squaring makes the
+    # reward symmetric: with K=2 both environments then receive an identical reward, the mean
+    # baseline cancels it exactly, and the editors get no gradient at all.
+    reward = (risk_vec - risk_vec.mean()).detach()
+    # the signed deviations already sum to zero, so the mean baseline is zero by construction
+    editor_loss = -torch.stack([lp * r for lp, r in zip(log_probs, reward)]).mean()
     editor_opt.zero_grad()
     editor_loss.backward()
     editor_opt.step()
